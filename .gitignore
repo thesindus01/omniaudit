@@ -8,3 +8,5 @@ node_modules/
 agency_data.json
 /AGENCY-*.md
 /AGENCY-*.pdf
+.vercel
+.env*.local
