@@ -215,51 +215,54 @@ function App() {
 
           yPos = 55;
 
-          // Critical Findings (Red Box)
-          let findingHeight = 20 + (data.findings.length * 12);
-          doc.setFillColor(254, 242, 242);
-          doc.setDrawColor(252, 165, 165);
-          doc.rect(20, yPos, 170, findingHeight, 'FD');
-          
+          const checkPageBreak = (neededHeight) => {
+            if (yPos + neededHeight > 280) {
+              doc.addPage();
+              yPos = 20;
+            }
+          };
+
+          // Critical Findings
+          checkPageBreak(30);
           doc.setTextColor(220, 38, 38);
           doc.setFontSize(14);
           doc.setFont("helvetica", "bold");
-          doc.text("CRITICAL FINDINGS & VULNERABILITIES", 25, yPos + 10);
+          doc.text("CRITICAL FINDINGS & VULNERABILITIES", 20, yPos);
+          yPos += 8;
           
           doc.setTextColor(0, 0, 0);
           doc.setFontSize(10);
           doc.setFont("helvetica", "normal");
-          let currentY = yPos + 20;
           data.findings.forEach(finding => {
-            const wrappedText = doc.splitTextToSize(`• ${finding}`, 160);
-            doc.text(wrappedText, 25, currentY);
-            currentY += (wrappedText.length * 5) + 3;
+            const wrappedText = doc.splitTextToSize(`• ${finding}`, 170);
+            const textHeight = wrappedText.length * 5;
+            checkPageBreak(textHeight + 5);
+            doc.text(wrappedText, 20, yPos);
+            yPos += textHeight + 4;
           });
 
-          yPos = yPos + findingHeight + 10;
+          yPos += 10;
 
-          // Quick Wins (Yellow Box)
-          let winsHeight = 20 + (data.quickWins.length * 12);
-          doc.setFillColor(254, 252, 232);
-          doc.setDrawColor(253, 224, 71);
-          doc.rect(20, yPos, 170, winsHeight, 'FD');
-          
+          // Quick Wins
+          checkPageBreak(30);
           doc.setTextColor(161, 98, 7);
           doc.setFontSize(14);
           doc.setFont("helvetica", "bold");
-          doc.text("STRATEGIC QUICK WINS", 25, yPos + 10);
+          doc.text("STRATEGIC QUICK WINS", 20, yPos);
+          yPos += 8;
           
           doc.setTextColor(0, 0, 0);
           doc.setFontSize(10);
           doc.setFont("helvetica", "normal");
-          currentY = yPos + 20;
           data.quickWins.forEach(win => {
-            const wrappedText = doc.splitTextToSize(`• ${win}`, 160);
-            doc.text(wrappedText, 25, currentY);
-            currentY += (wrappedText.length * 5) + 3;
+            const wrappedText = doc.splitTextToSize(`• ${win}`, 170);
+            const textHeight = wrappedText.length * 5;
+            checkPageBreak(textHeight + 5);
+            doc.text(wrappedText, 20, yPos);
+            yPos += textHeight + 4;
           });
 
-          yPos = yPos + winsHeight + 15;
+          yPos += 15;
 
           // Dimensions Matrix
           doc.setTextColor(15, 23, 42);

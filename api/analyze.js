@@ -77,7 +77,7 @@ export default async function handler(req, res) {
     - Score must be an integer between 0 and 100.
     - Status must be exactly one of: "good", "warning", "error".
     - Provide exactly 3 dimensions per category.
-    - Provide exactly 3 findings and 3 quickWins per category. Make them highly detailed and comprehensive for management decision making.`;
+    - CRITICAL: Provide exactly 3 findings and 3 quickWins per category. DO NOT use short bullet points. Every single finding and quickWin MUST be a highly detailed, 3-to-4 sentence paragraph. You MUST explicitly apply the specific frameworks, scoring rubrics, copy formulas, ad variations, or email sequence templates defined in the Skill Manuals for that specific agent. The user expects to see the actual deep output (like actual headline variations, actual ad copy, actual email subjects) directly inside the findings and quickWins text.
 
     const result = await model.generateContent(prompt);
     let outputText = result.response.text();
