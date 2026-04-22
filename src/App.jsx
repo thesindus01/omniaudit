@@ -6,6 +6,9 @@ import {
   Briefcase, Mail, Megaphone, Monitor, Users, BarChart3, Presentation, Globe
 } from 'lucide-react';
 import jsPDF from 'jspdf';
+import html2pdf from 'html2pdf.js';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { skillsData } from '../api/skillsData.js';
 
@@ -161,240 +164,41 @@ function App() {
     
     setTimeout(() => {
       try {
-        const doc = new jsPDF('p', 'mm', 'a4');
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
-        
-        // --- COVER PAGE ---
-        doc.setFillColor(15, 23, 42);
-        doc.rect(0, 0, pageWidth, pageHeight, 'F');
-        
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(40);
-        doc.setFont("helvetica", "bold");
-        doc.text("OMNIAUDIT AI", pageWidth / 2, 80, { align: 'center' });
-        
-        doc.setTextColor(59, 130, 246);
-        doc.setFontSize(22);
-        doc.text("EXECUTIVE INTELLIGENCE REPORT", pageWidth / 2, 100, { align: 'center' });
+        // Find the main dashboard container that holds all results
+        const element = document.getElementById('report-content');
+        if (!element) throw new Error("Report container not found");
 
-        doc.setTextColor(200, 200, 200);
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "normal");
-        doc.text(`Target Asset: ${results.url}`, pageWidth / 2, 130, { align: 'center' });
-        doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth / 2, 140, { align: 'center' });
+        const opt = {
+          margin:       [10, 10, 10, 10],
+          filename:     `OMNIAUDIT-EXECUTIVE-${results.url.replace(/https?:\\/\\//, '').replace(/\\//g, '')}.pdf`,
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { 
+            scale: 2, 
+            useCORS: true, 
+            logging: false,
+            backgroundColor: '#0f172a' // match dark theme
+          },
+          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+        };
 
-        doc.setFillColor(59, 130, 246);
-        doc.rect(pageWidth / 2 - 45, 165, 90, 35, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(24);
-        doc.setFont("helvetica", "bold");
-        doc.text(`COMPOSITE: ${results.composite}/100`, pageWidth / 2, 188, { align: 'center' });
+        // We temporarily add a class to the element to make it printer friendly if needed
+        element.classList.add('pdf-mode');
 
-        // --- EXECUTIVE SUMMARY PAGE ---
-        doc.addPage();
-        doc.setFillColor(255, 255, 255);
-        doc.rect(0, 0, pageWidth, pageHeight, 'F');
-
-        let yPos = 30;
-        doc.setTextColor(15, 23, 42);
-        doc.setFontSize(26);
-        doc.setFont("helvetica", "bold");
-        doc.text("Executive Summary", 20, yPos);
-        
-        doc.setLineWidth(1);
-        doc.setDrawColor(59, 130, 246);
-        doc.line(20, yPos + 5, 190, yPos + 5);
-        
-        yPos += 20;
-
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "normal");
-        const summaryText = doc.splitTextToSize(`This document contains a comprehensive 15-dimensional AI audit of ${results.url}. It is intended for executive management to review critical business intelligence, identify immediate operational vulnerabilities, and execute on high-ROI strategic improvements across all digital departments.`, 170);
-        doc.text(summaryText, 20, yPos);
-        yPos += 30;
-
-        doc.setFontSize(18);
-        doc.setFont("helvetica", "bold");
-        doc.text("Domain Performance Matrix", 20, yPos);
-        yPos += 15;
-        
-        AGENTS_CONFIG.forEach((agent, i) => {
-          const data = results.stats[agent.key];
-          if (!data) return;
-          
-          const col = i % 2;
-          const row = Math.floor(i / 2);
-          const x = 20 + (col * 85);
-          const y = yPos + (row * 15);
-          
-          doc.setFontSize(11);
-          doc.setFont("helvetica", "bold");
-          doc.setTextColor(70, 70, 70);
-          doc.text(agent.title.toUpperCase(), x, y);
-          
-          if (data.score >= 80) doc.setTextColor(34, 197, 94);
-          else if (data.score >= 50) doc.setTextColor(234, 179, 8);
-          else doc.setTextColor(239, 68, 68);
-          
-          doc.text(`${data.score}/100`, x + 75, y, { align: 'right' });
+        html2pdf().set(opt).from(element).save().then(() => {
+          element.classList.remove('pdf-mode');
+          setIsGeneratingPdf(false);
+          setPdfReady(true);
+        }).catch(err => {
+          console.error("PDF generation failed inside html2pdf:", err);
+          element.classList.remove('pdf-mode');
+          setIsGeneratingPdf(false);
         });
-
-        // --- DETAILED AGENT PAGES ---
-        AGENTS_CONFIG.forEach((agent) => {
-          const data = results.stats[agent.key];
-          if (!data) return;
-
-          doc.addPage();
-          
-          // Header Bar
-          doc.setFillColor(15, 23, 42);
-          doc.rect(0, 0, pageWidth, 40, 'F');
-          
-          doc.setFontSize(24);
-          doc.setFont("helvetica", "bold");
-          doc.setTextColor(255, 255, 255);
-          doc.text(`${agent.title.toUpperCase()}`, 20, 27);
-          
-          // Score Badge
-          if (data.score >= 80) doc.setFillColor(34, 197, 94);
-          else if (data.score >= 50) doc.setFillColor(234, 179, 8);
-          else doc.setFillColor(239, 68, 68);
-          
-          doc.rect(160, 10, 35, 20, 'F');
-          doc.setFontSize(18);
-          doc.setTextColor(255, 255, 255);
-          doc.text(`${data.score}/100`, 177.5, 25, { align: 'center' });
-
-          yPos = 55;
-
-          const checkPageBreak = (neededHeight) => {
-            if (yPos + neededHeight > 280) {
-              doc.addPage();
-              yPos = 20;
-            }
-          };
-
-          // Critical Findings
-          checkPageBreak(30);
-          doc.setTextColor(220, 38, 38);
-          doc.setFontSize(14);
-          doc.setFont("helvetica", "bold");
-          doc.text("IDENTIFIED ISSUES & PROBLEMS", 20, yPos);
-          yPos += 8;
-          
-          doc.setTextColor(0, 0, 0);
-          doc.setFontSize(10);
-          doc.setFont("helvetica", "normal");
-          if (data.identifiedIssues) {
-            data.identifiedIssues.forEach(finding => {
-              const wrappedText = doc.splitTextToSize(`• ${finding}`, 170);
-              const textHeight = wrappedText.length * 5;
-              checkPageBreak(textHeight + 5);
-              doc.text(wrappedText, 20, yPos);
-              yPos += textHeight + 4;
-            });
-          }
-
-          yPos += 10;
-
-          // Quick Wins
-          checkPageBreak(30);
-          doc.setTextColor(161, 98, 7);
-          doc.setFontSize(14);
-          doc.setFont("helvetica", "bold");
-          doc.text("PROPOSED SOLUTIONS", 20, yPos);
-          yPos += 8;
-          
-          doc.setTextColor(0, 0, 0);
-          doc.setFontSize(10);
-          doc.setFont("helvetica", "normal");
-          if (data.proposedSolutions) {
-            data.proposedSolutions.forEach(win => {
-              const wrappedText = doc.splitTextToSize(`• ${win}`, 170);
-              const textHeight = wrappedText.length * 5;
-              checkPageBreak(textHeight + 5);
-              doc.text(wrappedText, 20, yPos);
-              yPos += textHeight + 4;
-            });
-          }
-
-          yPos += 15;
-          
-          // Full Strategy Deliverable (Massive payload)
-          if (data.fullStrategyDeliverable) {
-            checkPageBreak(40);
-            doc.setTextColor(59, 130, 246);
-            doc.setFontSize(16);
-            doc.setFont("helvetica", "bold");
-            doc.text("FULL STRATEGY DELIVERABLE", 20, yPos);
-            yPos += 10;
-            
-            doc.setTextColor(50, 50, 50);
-            doc.setFontSize(9);
-            doc.setFont("helvetica", "normal");
-            
-            const paragraphs = data.fullStrategyDeliverable.split('\n');
-            paragraphs.forEach(para => {
-              if (para.trim() === '') {
-                 yPos += 3;
-                 return;
-              }
-              const wrappedPara = doc.splitTextToSize(para, 170);
-              const paraHeight = wrappedPara.length * 4;
-              checkPageBreak(paraHeight + 5);
-              doc.text(wrappedPara, 20, yPos);
-              yPos += paraHeight + 2;
-            });
-            yPos += 15;
-          }
-
-          // Dimensions Matrix
-          doc.setTextColor(15, 23, 42);
-          doc.setFontSize(16);
-          doc.setFont("helvetica", "bold");
-          doc.text("KPI DIMENSIONS", 20, yPos);
-          yPos += 12;
-
-          data.dimensions.forEach((dim) => {
-            if(yPos > 270) {
-              doc.addPage();
-              yPos = 20;
-            }
-            doc.setFontSize(11);
-            doc.setFont("helvetica", "bold");
-            doc.setTextColor(70, 70, 70);
-            doc.text(dim.name, 20, yPos);
-            
-            if (dim.status === 'good') doc.setTextColor(34, 197, 94);
-            else if (dim.status === 'warning') doc.setTextColor(234, 179, 8);
-            else doc.setTextColor(239, 68, 68);
-            
-            doc.text(`${dim.score}/100`, 190, yPos, { align: 'right' });
-            
-            // Progress bar
-            doc.setFillColor(226, 232, 240);
-            doc.rect(20, yPos + 3, 170, 4, 'F');
-            
-            if (dim.status === 'good') doc.setFillColor(34, 197, 94);
-            else if (dim.status === 'warning') doc.setFillColor(234, 179, 8);
-            else doc.setFillColor(239, 68, 68);
-            
-            doc.rect(20, yPos + 3, (170 * dim.score) / 100, 4, 'F');
-            
-            yPos += 15;
-          });
-        });
-
-        doc.save(`OMNIAUDIT-EXECUTIVE-${results.url.replace(/https?:\/\//, '').replace(/\//g, '')}.pdf`);
-        
-        setIsGeneratingPdf(false);
-        setPdfReady(true);
       } catch (error) {
         console.error("PDF Gen Error:", error);
         setIsGeneratingPdf(false);
       }
-    }, 1500);
+    }, 500);
   };
 
   const getStatusIcon = (status) => {
@@ -466,11 +270,11 @@ function App() {
         )}
 
         {results && (
-          <div className="dashboard-results animate-fade-in">
-            <div className="mb-6 flex justify-between items-center" style={{ flexWrap: 'wrap', gap: '1rem' }}>
+          <div id="report-content" className="dashboard-results animate-fade-in" style={{ background: '#0f172a', padding: '2rem', borderRadius: '12px' }}>
+            <div className="mb-6 flex justify-between items-center html2pdf__page-break" style={{ flexWrap: 'wrap', gap: '1rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
               <div>
-                <h2 className="text-2xl font-bold">Audit Results for <span className="text-primary">{results.url}</span></h2>
-                <p className="text-secondary">Comprehensive analysis generated across 15 intelligence domains</p>
+                <h2 className="text-2xl font-bold">Executive Audit: <span className="text-primary">{results.url}</span></h2>
+                <p className="text-secondary">Comprehensive 12-dimensional analysis driven by Master Skill Methodologies</p>
               </div>
               
               <div style={{ display: 'flex', gap: '1rem' }}>
@@ -659,19 +463,16 @@ export function DetailedRow({ id, title, score, type, icon, dimensions, identifi
       
       {/* Full Deliverable Rendered */}
       {fullStrategyDeliverable && (
-        <div style={{ marginTop: '1rem', background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+        <div style={{ marginTop: '1rem', background: 'rgba(0,0,0,0.2)', padding: '2rem', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
           <h4 className="text-md font-bold mb-4 uppercase tracking-wider" style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FileText size={18} /> Full Strategy Deliverable
+            <FileText size={18} /> Deep Strategy Deliverable
           </h4>
-          <div style={{ 
-            color: 'var(--text-secondary)', 
-            fontSize: '0.95rem', 
-            lineHeight: '1.6',
-            whiteSpace: 'pre-wrap',
-            fontFamily: 'system-ui, -apple-system, sans-serif'
-          }}>
+          <ReactMarkdown 
+            className="markdown-body" 
+            remarkPlugins={[remarkGfm]}
+          >
             {fullStrategyDeliverable}
-          </div>
+          </ReactMarkdown>
         </div>
       )}
 
