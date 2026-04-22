@@ -2,6 +2,8 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { skillsData } from './skillsData.js';
+
+export const maxDuration = 60; // Increase Vercel timeout to 60 seconds for heavy AI generation
 export default async function handler(req, res) {
   // CORS configuration for Vercel
   res.setHeader('Access-Control-Allow-Credentials', true);
