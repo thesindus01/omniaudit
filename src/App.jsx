@@ -81,6 +81,8 @@ function App() {
       const genAI = new GoogleGenerativeAI(payload.key);
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+      const skillManualsText = Object.entries(skillsData).map(([name, content]) => "=== SKILL MANUAL: " + name + " ===\n" + content + "\n").join('\n');
+
       const prompt = `You are a suite of 15 advanced AI Agents analyzing this scraped URL text:
       ---
       ${payload.text}
@@ -88,7 +90,7 @@ function App() {
       
       CRITICAL INSTRUCTION: You MUST strictly base your analysis, findings, and quickWins on the detailed methodologies, templates, and frameworks provided in these Skill Manuals below:
       
-      ${Object.entries(skillsData).map(([name, content]) => \`=== SKILL MANUAL: ${name} ===\\n${content}\\n\`).join('\\n')}
+      ${skillManualsText}
       
       RETURN ONLY PURE JSON. Do not return markdown blocks like "\`\`\`json".
       You must return EXACTLY this JSON structure containing ALL 15 keys below. Replace the example values with your actual detailed, management-level analysis based on the live data scraped above AND the methodologies defined in the Skill Manuals. Each agent MUST provide deep, professional insights:
