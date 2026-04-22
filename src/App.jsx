@@ -79,7 +79,7 @@ function App() {
       setScanStep(2); // Start analyzing
       
       const genAI = new GoogleGenerativeAI(payload.key);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
       const skillManualsText = Object.entries(skillsData).map(([name, content]) => "=== SKILL MANUAL: " + name + " ===\n" + content + "\n").join('\n');
 
