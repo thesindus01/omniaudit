@@ -267,16 +267,19 @@ function App() {
       CRITICAL INSTRUCTION: You MUST execute the EXACT workflow and provide the EXACT output demanded by your Master Skill Manual below. 
       DO NOT SUMMARIZE. DO NOT SHORTEN. DO NOT OMIT ANYTHING.
       
-      FORMATTING MANDATES:
-      1. You MUST use beautiful, clean, modern Markdown formatting.
-      2. If you are generating a matrix, breakdown, or comparison, you MUST use standard Markdown Tables (e.g. | Column 1 | Column 2 |). DO NOT use raw text alignment.
-      3. If you are generating terminal output, funnel maps, or raw code, you MUST wrap it in Markdown Code Blocks (using three backticks).
-      4. Use proper Headings (##, ###), bullet points, and bold text for visual hierarchy.
-      
-      This is a multi-thousand word deep dive for executives. Make it visually stunning. Output ONLY RAW MARKDOWN.
-      
       === YOUR MASTER SKILL MANUAL ===
       ${skillManual}
+      
+      === FINAL CRITICAL FORMATTING MANDATES ===
+      You are an expert UI/UX Executive Copywriter. You MUST format your response using gorgeous, modern Markdown. 
+      The layout MUST look like a high-end, premium $10,000 consulting deliverable:
+      1. NO SPACE-ALIGNED TEXT ALLOWED. ANY time you list metrics, scores, comparisons, timelines, or multi-column data, YOU STRICTLY MUST use a standard Markdown Table (e.g. \`| Header 1 | Header 2 |\n|---|---|\n| Data | Data |\`).
+      2. If you are generating a visual ASCII funnel map or terminal output, you MUST wrap it in a Markdown code block (\` \`\`\` \`).
+      3. Do NOT wrap tables in code blocks.
+      4. Use \`> blockquotes\` for key insights, takeaways, and revenue impacts.
+      5. Use heavily structured Headings (\`#\`, \`##\`, \`###\`), bolding, and italics to create an interactive, scannable visual hierarchy.
+      
+      Output ONLY raw markdown. Do not include any conversational preamble.
       `;
 
       const aiResult = await model.generateContent(prompt);
