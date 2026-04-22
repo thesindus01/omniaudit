@@ -79,7 +79,10 @@ function App() {
       setScanStep(2); // Start analyzing
       
       const genAI = new GoogleGenerativeAI(payload.key);
-      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+      const model = genAI.getGenerativeModel({ 
+        model: "gemini-flash-latest",
+        generationConfig: { responseMimeType: "application/json" }
+      });
 
       const skillManualsText = Object.entries(skillsData).map(([name, content]) => "=== SKILL MANUAL: " + name + " ===\n" + content + "\n").join('\n');
 
@@ -120,6 +123,10 @@ function App() {
       const result = await model.generateContent(prompt);
       let outputText = result.response.text();
       outputText = outputText.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+      
+      // Clean up any trailing commas that could break JSON.parse()
+      outputText = outputText.replace(/,\s*([\]}])/g, '$1');
+      
       const stats = JSON.parse(outputText);
 
       clearInterval(interval);
