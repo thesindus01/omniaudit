@@ -266,8 +266,14 @@ function App() {
       
       CRITICAL INSTRUCTION: You MUST execute the EXACT workflow and provide the EXACT output demanded by your Master Skill Manual below. 
       DO NOT SUMMARIZE. DO NOT SHORTEN. DO NOT OMIT ANYTHING.
-      If the manual asks for 3 ad variations, write all 3. If it asks for an ASCII map, draw it. If it asks for email sequences, write the full emails.
-      This is a multi-thousand word deep dive. Output ONLY RAW MARKDOWN.
+      
+      FORMATTING MANDATES:
+      1. You MUST use beautiful, clean, modern Markdown formatting.
+      2. If you are generating a matrix, breakdown, or comparison, you MUST use standard Markdown Tables (e.g. | Column 1 | Column 2 |). DO NOT use raw text alignment.
+      3. If you are generating terminal output, funnel maps, or raw code, you MUST wrap it in Markdown Code Blocks (using three backticks).
+      4. Use proper Headings (##, ###), bullet points, and bold text for visual hierarchy.
+      
+      This is a multi-thousand word deep dive for executives. Make it visually stunning. Output ONLY RAW MARKDOWN.
       
       === YOUR MASTER SKILL MANUAL ===
       ${skillManual}
