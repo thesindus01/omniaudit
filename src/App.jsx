@@ -254,7 +254,7 @@ function App() {
 
     try {
       const genAI = new GoogleGenerativeAI(results.apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
       
       const skillManual = skillsData[agentKey];
       
@@ -276,8 +276,9 @@ function App() {
       1. NO SPACE-ALIGNED TEXT ALLOWED. ANY time you list metrics, scores, comparisons, timelines, or multi-column data, YOU STRICTLY MUST use a standard Markdown Table (e.g. \`| Header 1 | Header 2 |\n|---|---|\n| Data | Data |\`).
       2. If you are generating a visual ASCII funnel map or terminal output, you MUST wrap it in a Markdown code block (\` \`\`\` \`).
       3. Do NOT wrap tables in code blocks.
-      4. Use \`> blockquotes\` for key insights, takeaways, and revenue impacts.
-      5. Use heavily structured Headings (\`#\`, \`##\`, \`###\`), bolding, and italics to create an interactive, scannable visual hierarchy.
+      4. DO NOT INDENT TEXT WITH 4 SPACES. This accidentally creates Markdown code blocks and breaks the layout.
+      5. Use \`> blockquotes\` for key insights, takeaways, and revenue impacts.
+      6. Use heavily structured Headings (\`#\`, \`##\`, \`###\`), bolding, and italics to create an interactive, scannable visual hierarchy.
       
       Output ONLY raw markdown. Do not include any conversational preamble.
       `;
