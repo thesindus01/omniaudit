@@ -503,7 +503,7 @@ export function DetailedRow({ id, title, score, type, icon, dimensions, identifi
             <AlertTriangle size={16} className="text-danger" /> Identified Issues
           </h4>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem', margin: 0, padding: 0 }}>
-            {identifiedIssues.map((finding, idx) => (
+            {(Array.isArray(identifiedIssues) ? identifiedIssues : []).map((finding, idx) => (
               <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.90rem' }}>
                 <span style={{ color: 'var(--danger)', fontWeight: 'bold' }}>•</span>
                 <span style={{ color: 'var(--text-primary)', lineHeight: '1.4' }}>{finding}</span>
@@ -517,7 +517,7 @@ export function DetailedRow({ id, title, score, type, icon, dimensions, identifi
             <Zap size={16} className="text-warning" /> Proposed Solutions
           </h4>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem', margin: 0, padding: 0 }}>
-            {proposedSolutions.map((win, idx) => (
+            {(Array.isArray(proposedSolutions) ? proposedSolutions : []).map((win, idx) => (
               <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.90rem' }}>
                 <span style={{ color: 'var(--warning)', fontWeight: 'bold' }}>•</span>
                 <span style={{ color: 'var(--text-primary)', lineHeight: '1.4' }}>{win}</span>
@@ -575,7 +575,7 @@ export function DetailedRow({ id, title, score, type, icon, dimensions, identifi
 
       {/* KPI Scores Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', marginTop: '0.5rem' }}>
-        {dimensions.map((dim, idx) => (
+        {(Array.isArray(dimensions) ? dimensions : []).map((dim, idx) => (
           <div key={idx} style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-primary)' }}>{dim.name}</span>
