@@ -30,6 +30,37 @@ const AGENTS_CONFIG = [
   { key: 'market-report-pdf', title: 'PDF Layout Design', icon: <Monitor size={24}/>, weight: '2.5%', desc: 'Document structure & visual flow.' }
 ];
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught an error", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '2rem', background: '#7f1d1d', color: 'white', borderRadius: '12px', marginTop: '2rem' }}>
+          <h2 className="text-2xl font-bold mb-4">Rendering Crash Detected</h2>
+          <p>The AI generated invalid or incomplete data that caused the dashboard to crash.</p>
+          <pre style={{ background: 'rgba(0,0,0,0.5)', padding: '1rem', borderRadius: '8px', marginTop: '1rem', whiteSpace: 'pre-wrap' }}>
+            {this.state.error && this.state.error.toString()}
+          </pre>
+          <button onClick={() => window.location.reload()} className="btn-primary mt-4" style={{ width: 'auto' }}>Reload App</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function App() {
   const [url, setUrl] = useState('');
   const [isScanning, setIsScanning] = useState(false);
@@ -334,8 +365,9 @@ function App() {
         )}
 
         {results && (
-          <div id="report-content" className="dashboard-results animate-fade-in" style={{ background: '#0f172a', padding: '2rem', borderRadius: '12px' }}>
-            <div className="mb-6 flex justify-between items-center html2pdf__page-break" style={{ flexWrap: 'wrap', gap: '1rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+          <ErrorBoundary>
+            <div id="report-content" className="dashboard-results animate-fade-in" style={{ background: '#0f172a', padding: '2rem', borderRadius: '12px' }}>
+              <div className="mb-6 flex justify-between items-center html2pdf__page-break" style={{ flexWrap: 'wrap', gap: '1rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
               <div>
                 <h2 className="text-2xl font-bold">Executive Audit: <span className="text-primary">{results.url}</span></h2>
                 <p className="text-secondary">Comprehensive 14-dimensional analysis driven by Master Skill Methodologies</p>
@@ -428,7 +460,8 @@ function App() {
               </div>
             </div>
 
-          </div>
+            </div>
+          </ErrorBoundary>
         )}
 
         <footer style={{ marginTop: '4rem', padding: '2rem 0', borderTop: '1px solid rgba(255,255,255,0.1)', textAlign: 'center', color: 'var(--text-secondary)' }}>
