@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Search, Cpu, LineChart, Shield, TrendingUp, Scale, 
-  Check, ArrowRight, Activity, Target, Zap, AlertTriangle, 
+  Check, ArrowRight, Activity, Target, Zap, AlertTriangle, XCircle,
   Info, CheckCircle2, Download, FileText, Radar, LayoutTemplate, 
   Briefcase, Mail, Megaphone, Monitor, Users, BarChart3, Presentation, Globe
 } from 'lucide-react';
