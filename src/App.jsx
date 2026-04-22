@@ -151,14 +151,12 @@ function App() {
       }
       Rules:
       - Score must be an integer between 0 and 100.
-      - Provide exactly 3 identifiedIssues and 3 proposedSolutions per category.`;
+      - Provide exactly 3 identifiedIssues and 3 proposedSolutions per category.
+      - You MUST ensure ALL strings and array items are wrapped in double quotes. Do not leave text unquoted.
+      - You MUST return 100% valid, parsable JSON.`;
 
       const result = await model.generateContent(prompt);
-      let outputText = result.response.text();
-      outputText = outputText.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
-      
-      // Clean up any trailing commas that could break JSON.parse()
-      outputText = outputText.replace(/,\s*([\]}])/g, '$1');
+      const outputText = result.response.text();
       
       const stats = JSON.parse(outputText);
 
