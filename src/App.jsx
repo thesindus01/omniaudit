@@ -170,7 +170,7 @@ function App() {
 
         const opt = {
           margin:       [10, 10, 10, 10],
-          filename:     `OMNIAUDIT-EXECUTIVE-${results.url.replace(/https?:\\/\\//, '').replace(/\\//g, '')}.pdf`,
+          filename:     `OMNIAUDIT-EXECUTIVE-${results.url.replace(/https?:\/\//, '').replace(/\//g, '')}.pdf`,
           image:        { type: 'jpeg', quality: 0.98 },
           html2canvas:  { 
             scale: 2, 
