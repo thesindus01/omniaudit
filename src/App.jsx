@@ -9,23 +9,20 @@ import jsPDF from 'jspdf';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { skillsData } from '../api/skillsData.js';
 
-// 15 Agent Configuration
+// 12 Agent Configuration matching SKILL.md files exactly
 const AGENTS_CONFIG = [
-  { key: 'audit', title: 'Overall Strategy', icon: <Target size={24}/>, weight: '10%', desc: 'High-level business audit.' },
-  { key: 'brand', title: 'Brand & Positioning', icon: <Briefcase size={24}/>, weight: '5%', desc: 'Brand identity & consistency.' },
-  { key: 'copy', title: 'Copy & Messaging', icon: <FileText size={24}/>, weight: '10%', desc: 'Value prop & copywriting.' },
-  { key: 'emails', title: 'Email Marketing', icon: <Mail size={24}/>, weight: '5%', desc: 'Nurture & automation.' },
-  { key: 'social', title: 'Social Media', icon: <Users size={24}/>, weight: '5%', desc: 'Organic social presence.' },
-  { key: 'ads', title: 'Paid Acquisition', icon: <Megaphone size={24}/>, weight: '10%', desc: 'ROAS & paid strategies.' },
-  { key: 'funnel', title: 'Sales Funnel', icon: <Activity size={24}/>, weight: '10%', desc: 'Conversion pathways.' },
-  { key: 'competitors', title: 'Competitor Intel', icon: <Radar size={24}/>, weight: '5%', desc: 'Market share & gaps.' },
-  { key: 'landing', title: 'Landing Pages', icon: <LayoutTemplate size={24}/>, weight: '5%', desc: 'UX/UI & conversion.' },
-  { key: 'launch', title: 'Campaign Launch', icon: <Zap size={24}/>, weight: '5%', desc: 'Go-to-market strategies.' },
-  { key: 'proposal', title: 'Proposal & Pricing', icon: <Presentation size={24}/>, weight: '5%', desc: 'Offer appeal & pricing.' },
-  { key: 'seo', title: 'GEO & SEO', icon: <Globe size={24}/>, weight: '10%', desc: 'Search visibility.' },
-  { key: 'reputation', title: 'Reputation', icon: <Shield size={24}/>, weight: '5%', desc: 'Reviews & sentiment.' },
-  { key: 'sales', title: 'Sales Intel', icon: <BarChart3 size={24}/>, weight: '5%', desc: 'Lead qualification.' },
-  { key: 'legal', title: 'Compliance', icon: <Scale size={24}/>, weight: '5%', desc: 'GDPR, CCPA & accessibility.' }
+  { key: 'market-audit', title: 'Market Audit', icon: <Target size={24}/>, weight: '15%', desc: 'Overall marketing health & strategy.' },
+  { key: 'market-ads', title: 'Ad Campaigns (Ads)', icon: <Megaphone size={24}/>, weight: '10%', desc: 'Ad structures & copy variations.' },
+  { key: 'market-brand', title: 'Brand Identity', icon: <Briefcase size={24}/>, weight: '5%', desc: 'Brand positioning & consistency.' },
+  { key: 'market-competitors', title: 'Competitor Intel', icon: <Radar size={24}/>, weight: '10%', desc: 'Market gaps & competitor analysis.' },
+  { key: 'market-copy', title: 'Copywriting', icon: <FileText size={24}/>, weight: '10%', desc: 'Value propositions & sales copy.' },
+  { key: 'market-emails', title: 'Email Sequences', icon: <Mail size={24}/>, weight: '10%', desc: 'Nurture campaigns & automation.' },
+  { key: 'market-funnel', title: 'Sales Funnel', icon: <Activity size={24}/>, weight: '10%', desc: 'Conversion pathway optimization.' },
+  { key: 'market-landing', title: 'Landing Pages', icon: <LayoutTemplate size={24}/>, weight: '5%', desc: 'UX/UI & conversion triggers.' },
+  { key: 'market-launch', title: 'Campaign Launch', icon: <Zap size={24}/>, weight: '5%', desc: 'Go-to-market rollout plans.' },
+  { key: 'market-proposal', title: 'Proposals & Offers', icon: <Presentation size={24}/>, weight: '5%', desc: 'Pricing strategy & offer framing.' },
+  { key: 'market-seo', title: 'SEO Strategy', icon: <Globe size={24}/>, weight: '10%', desc: 'Search visibility & keywords.' },
+  { key: 'market-social', title: 'Social Media', icon: <Users size={24}/>, weight: '5%', desc: 'Organic social growth tactics.' }
 ];
 
 function App() {
@@ -86,39 +83,37 @@ function App() {
 
       const skillManualsText = Object.entries(skillsData).map(([name, content]) => "=== SKILL MANUAL: " + name + " ===\n" + content + "\n").join('\n');
 
-      const prompt = `You are a suite of 15 advanced AI Agents analyzing this scraped URL text:
+      const prompt = `You are a suite of 12 advanced AI Marketing Agents analyzing this scraped URL text:
       ---
       ${payload.text}
       ---
       
-      CRITICAL INSTRUCTION: You MUST strictly base your analysis, findings, and quickWins on the detailed methodologies, templates, and frameworks provided in these Skill Manuals below:
+      CRITICAL INSTRUCTION: You MUST strictly base your analysis, identified issues, problems, and full solutions on the methodologies, templates, and frameworks provided in these Skill Manuals below:
       
       ${skillManualsText}
       
       RETURN ONLY PURE JSON. Do not return markdown blocks like "\`\`\`json".
-      You must return EXACTLY this JSON structure containing ALL 15 keys below. Replace the example values with your actual detailed, management-level analysis based on the live data scraped above AND the methodologies defined in the Skill Manuals. Each agent MUST provide deep, professional insights:
+      You must return EXACTLY this JSON structure containing ALL 12 keys representing the 12 agents. 
+      For each agent, you must provide 'identifiedIssues' (problems found), 'proposedSolutions' (what needs to be done), and a massive 'fullStrategyDeliverable' which must contain the entire generated output requested by the SKILL.md (e.g., ad variations, email templates, full audit reports) formatted beautifully with newlines.
+      
       {
-        "audit": { "score": 85, "dimensions": [{ "name": "Strategic Alignment", "score": 85, "status": "good" }], "findings": ["..."], "quickWins": ["..."] },
-        "brand": { "score": 75, "dimensions": [{ "name": "Brand Consistency", "score": 75, "status": "warning" }], "findings": ["..."], "quickWins": ["..."] },
-        "copy": { "score": 90, "dimensions": [{ "name": "Messaging Clarity", "score": 90, "status": "good" }], "findings": ["..."], "quickWins": ["..."] },
-        "emails": { "score": 50, "dimensions": [{ "name": "Lead Nurture", "score": 50, "status": "warning" }], "findings": ["..."], "quickWins": ["..."] },
-        "social": { "score": 80, "dimensions": [{ "name": "Platform Presence", "score": 80, "status": "good" }], "findings": ["..."], "quickWins": ["..."] },
-        "ads": { "score": 40, "dimensions": [{ "name": "Ad Spend ROI", "score": 40, "status": "error" }], "findings": ["..."], "quickWins": ["..."] },
-        "funnel": { "score": 70, "dimensions": [{ "name": "Conversion Rate", "score": 70, "status": "warning" }], "findings": ["..."], "quickWins": ["..."] },
-        "competitors": { "score": 85, "dimensions": [{ "name": "Market Share", "score": 85, "status": "good" }], "findings": ["..."], "quickWins": ["..."] },
-        "landing": { "score": 60, "dimensions": [{ "name": "UX/UI", "score": 60, "status": "warning" }], "findings": ["..."], "quickWins": ["..."] },
-        "launch": { "score": 55, "dimensions": [{ "name": "Go-to-Market", "score": 55, "status": "warning" }], "findings": ["..."], "quickWins": ["..."] },
-        "proposal": { "score": 80, "dimensions": [{ "name": "Offer Appeal", "score": 80, "status": "good" }], "findings": ["..."], "quickWins": ["..."] },
-        "seo": { "score": 45, "dimensions": [{ "name": "Technical SEO", "score": 45, "status": "error" }], "findings": ["..."], "quickWins": ["..."] },
-        "reputation": { "score": 95, "dimensions": [{ "name": "Review Sentiment", "score": 95, "status": "good" }], "findings": ["..."], "quickWins": ["..."] },
-        "sales": { "score": 85, "dimensions": [{ "name": "Lead Qualification", "score": 85, "status": "good" }], "findings": ["..."], "quickWins": ["..."] },
-        "legal": { "score": 30, "dimensions": [{ "name": "GDPR Compliance", "score": 30, "status": "error" }], "findings": ["..."], "quickWins": ["..."] }
+        "market-audit": { "score": 85, "dimensions": [{ "name": "Strategic Alignment", "score": 85, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "The massive, comprehensive output defined in SKILL.md..." },
+        "market-ads": { "score": 75, "dimensions": [{ "name": "Ad Spend ROI", "score": 75, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "YOUR FULL AD CAMPAIGN TEXT HERE..." },
+        "market-brand": { "score": 90, "dimensions": [{ "name": "Brand Consistency", "score": 90, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
+        "market-competitors": { "score": 50, "dimensions": [{ "name": "Market Share", "score": 50, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
+        "market-copy": { "score": 80, "dimensions": [{ "name": "Messaging Clarity", "score": 80, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
+        "market-emails": { "score": 40, "dimensions": [{ "name": "Lead Nurture", "score": 40, "status": "error" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
+        "market-funnel": { "score": 70, "dimensions": [{ "name": "Conversion Rate", "score": 70, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
+        "market-landing": { "score": 85, "dimensions": [{ "name": "UX/UI", "score": 85, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
+        "market-launch": { "score": 60, "dimensions": [{ "name": "Go-to-Market", "score": 60, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
+        "market-proposal": { "score": 55, "dimensions": [{ "name": "Offer Appeal", "score": 55, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
+        "market-seo": { "score": 80, "dimensions": [{ "name": "Technical SEO", "score": 80, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
+        "market-social": { "score": 45, "dimensions": [{ "name": "Platform Presence", "score": 45, "status": "error" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." }
       }
       Rules:
       - Score must be an integer between 0 and 100.
-      - Status must be exactly one of: "good", "warning", "error".
-      - Provide exactly 3 dimensions per category.
-      - CRITICAL: Provide exactly 3 findings and 3 quickWins per category. DO NOT use short bullet points. Every single finding and quickWin MUST be a highly detailed, 3-to-4 sentence paragraph. You MUST explicitly apply the specific frameworks, scoring rubrics, copy formulas, ad variations, or email sequence templates defined in the Skill Manuals for that specific agent. The user expects to see the actual deep output (like actual headline variations, actual ad copy, actual email subjects) directly inside the findings and quickWins text.`;
+      - Provide exactly 3 identifiedIssues and 3 proposedSolutions per category.
+      - CRITICAL: 'fullStrategyDeliverable' MUST be a massive, multi-paragraph string containing the full, unabridged solution demanded by the SKILL.md. If the skill asks for 3 ad variations, put them here. If it asks for 5 email sequences, put them here. Do not summarize! Provide the actual work.`;
 
       const result = await model.generateContent(prompt);
       let outputText = result.response.text();
@@ -285,19 +280,21 @@ function App() {
           doc.setTextColor(220, 38, 38);
           doc.setFontSize(14);
           doc.setFont("helvetica", "bold");
-          doc.text("CRITICAL FINDINGS & VULNERABILITIES", 20, yPos);
+          doc.text("IDENTIFIED ISSUES & PROBLEMS", 20, yPos);
           yPos += 8;
           
           doc.setTextColor(0, 0, 0);
           doc.setFontSize(10);
           doc.setFont("helvetica", "normal");
-          data.findings.forEach(finding => {
-            const wrappedText = doc.splitTextToSize(`• ${finding}`, 170);
-            const textHeight = wrappedText.length * 5;
-            checkPageBreak(textHeight + 5);
-            doc.text(wrappedText, 20, yPos);
-            yPos += textHeight + 4;
-          });
+          if (data.identifiedIssues) {
+            data.identifiedIssues.forEach(finding => {
+              const wrappedText = doc.splitTextToSize(`• ${finding}`, 170);
+              const textHeight = wrappedText.length * 5;
+              checkPageBreak(textHeight + 5);
+              doc.text(wrappedText, 20, yPos);
+              yPos += textHeight + 4;
+            });
+          }
 
           yPos += 10;
 
@@ -306,21 +303,51 @@ function App() {
           doc.setTextColor(161, 98, 7);
           doc.setFontSize(14);
           doc.setFont("helvetica", "bold");
-          doc.text("STRATEGIC QUICK WINS", 20, yPos);
+          doc.text("PROPOSED SOLUTIONS", 20, yPos);
           yPos += 8;
           
           doc.setTextColor(0, 0, 0);
           doc.setFontSize(10);
           doc.setFont("helvetica", "normal");
-          data.quickWins.forEach(win => {
-            const wrappedText = doc.splitTextToSize(`• ${win}`, 170);
-            const textHeight = wrappedText.length * 5;
-            checkPageBreak(textHeight + 5);
-            doc.text(wrappedText, 20, yPos);
-            yPos += textHeight + 4;
-          });
+          if (data.proposedSolutions) {
+            data.proposedSolutions.forEach(win => {
+              const wrappedText = doc.splitTextToSize(`• ${win}`, 170);
+              const textHeight = wrappedText.length * 5;
+              checkPageBreak(textHeight + 5);
+              doc.text(wrappedText, 20, yPos);
+              yPos += textHeight + 4;
+            });
+          }
 
           yPos += 15;
+          
+          // Full Strategy Deliverable (Massive payload)
+          if (data.fullStrategyDeliverable) {
+            checkPageBreak(40);
+            doc.setTextColor(59, 130, 246);
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            doc.text("FULL STRATEGY DELIVERABLE", 20, yPos);
+            yPos += 10;
+            
+            doc.setTextColor(50, 50, 50);
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            
+            const paragraphs = data.fullStrategyDeliverable.split('\n');
+            paragraphs.forEach(para => {
+              if (para.trim() === '') {
+                 yPos += 3;
+                 return;
+              }
+              const wrappedPara = doc.splitTextToSize(para, 170);
+              const paraHeight = wrappedPara.length * 4;
+              checkPageBreak(paraHeight + 5);
+              doc.text(wrappedPara, 20, yPos);
+              yPos += paraHeight + 2;
+            });
+            yPos += 15;
+          }
 
           // Dimensions Matrix
           doc.setTextColor(15, 23, 42);
@@ -521,8 +548,9 @@ function App() {
                       type={`agent-${agent.key}`} 
                       icon={agent.icon}
                       dimensions={data.dimensions}
-                      findings={data.findings}
-                      quickWins={data.quickWins}
+                      identifiedIssues={data.identifiedIssues || []}
+                      proposedSolutions={data.proposedSolutions || []}
+                      fullStrategyDeliverable={data.fullStrategyDeliverable}
                       getStatusIcon={getStatusIcon}
                     />
                   )
@@ -586,7 +614,7 @@ function AgentCard({ title, score, icon, weight, type, desc, onClick }) {
   );
 }
 
-function DetailedRow({ id, title, score, type, icon, dimensions, findings, quickWins, getStatusIcon }) {
+export function DetailedRow({ id, title, score, type, icon, dimensions, identifiedIssues, proposedSolutions, fullStrategyDeliverable, getStatusIcon }) {
   return (
     <div id={id} className={`glass-card p-6 flex-col ${type}`} style={{ display: 'flex', gap: '1.25rem', borderLeft: '4px solid var(--agent-color)', scrollMarginTop: '20px' }}>
       {/* Header */}
@@ -602,10 +630,10 @@ function DetailedRow({ id, title, score, type, icon, dimensions, findings, quick
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
         <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
           <h4 className="text-sm font-bold text-secondary mb-3 uppercase tracking-wider" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <AlertTriangle size={16} className="text-danger" /> Critical Findings
+            <AlertTriangle size={16} className="text-danger" /> Identified Issues
           </h4>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem', margin: 0, padding: 0 }}>
-            {findings.map((finding, idx) => (
+            {identifiedIssues.map((finding, idx) => (
               <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.90rem' }}>
                 <span style={{ color: 'var(--danger)', fontWeight: 'bold' }}>•</span>
                 <span style={{ color: 'var(--text-primary)', lineHeight: '1.4' }}>{finding}</span>
@@ -616,10 +644,10 @@ function DetailedRow({ id, title, score, type, icon, dimensions, findings, quick
         
         <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '8px', border: '1px solid rgba(234, 179, 8, 0.2)' }}>
           <h4 className="text-sm font-bold text-secondary mb-3 uppercase tracking-wider" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Zap size={16} className="text-warning" /> Strategic Quick Wins
+            <Zap size={16} className="text-warning" /> Proposed Solutions
           </h4>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem', margin: 0, padding: 0 }}>
-            {quickWins.map((win, idx) => (
+            {proposedSolutions.map((win, idx) => (
               <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.90rem' }}>
                 <span style={{ color: 'var(--warning)', fontWeight: 'bold' }}>•</span>
                 <span style={{ color: 'var(--text-primary)', lineHeight: '1.4' }}>{win}</span>
@@ -628,6 +656,24 @@ function DetailedRow({ id, title, score, type, icon, dimensions, findings, quick
           </ul>
         </div>
       </div>
+      
+      {/* Full Deliverable Rendered */}
+      {fullStrategyDeliverable && (
+        <div style={{ marginTop: '1rem', background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+          <h4 className="text-md font-bold mb-4 uppercase tracking-wider" style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <FileText size={18} /> Full Strategy Deliverable
+          </h4>
+          <div style={{ 
+            color: 'var(--text-secondary)', 
+            fontSize: '0.95rem', 
+            lineHeight: '1.6',
+            whiteSpace: 'pre-wrap',
+            fontFamily: 'system-ui, -apple-system, sans-serif'
+          }}>
+            {fullStrategyDeliverable}
+          </div>
+        </div>
+      )}
 
       {/* KPI Scores Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', marginTop: '0.5rem' }}>
