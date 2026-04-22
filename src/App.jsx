@@ -12,10 +12,10 @@ import remarkGfm from 'remark-gfm';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { skillsData } from '../api/skillsData.js';
 
-// 12 Agent Configuration matching SKILL.md files exactly
+// 14 Agent Configuration matching SKILL.md files exactly
 const AGENTS_CONFIG = [
-  { key: 'market-audit', title: 'Market Audit', icon: <Target size={24}/>, weight: '15%', desc: 'Overall marketing health & strategy.' },
-  { key: 'market-ads', title: 'Ad Campaigns (Ads)', icon: <Megaphone size={24}/>, weight: '10%', desc: 'Ad structures & copy variations.' },
+  { key: 'market-audit', title: 'Market Audit', icon: <Target size={24}/>, weight: '10%', desc: 'Overall marketing health & strategy.' },
+  { key: 'market-ads', title: 'Ad Campaigns', icon: <Megaphone size={24}/>, weight: '10%', desc: 'Ad structures & copy variations.' },
   { key: 'market-brand', title: 'Brand Identity', icon: <Briefcase size={24}/>, weight: '5%', desc: 'Brand positioning & consistency.' },
   { key: 'market-competitors', title: 'Competitor Intel', icon: <Radar size={24}/>, weight: '10%', desc: 'Market gaps & competitor analysis.' },
   { key: 'market-copy', title: 'Copywriting', icon: <FileText size={24}/>, weight: '10%', desc: 'Value propositions & sales copy.' },
@@ -25,7 +25,9 @@ const AGENTS_CONFIG = [
   { key: 'market-launch', title: 'Campaign Launch', icon: <Zap size={24}/>, weight: '5%', desc: 'Go-to-market rollout plans.' },
   { key: 'market-proposal', title: 'Proposals & Offers', icon: <Presentation size={24}/>, weight: '5%', desc: 'Pricing strategy & offer framing.' },
   { key: 'market-seo', title: 'SEO Strategy', icon: <Globe size={24}/>, weight: '10%', desc: 'Search visibility & keywords.' },
-  { key: 'market-social', title: 'Social Media', icon: <Users size={24}/>, weight: '5%', desc: 'Organic social growth tactics.' }
+  { key: 'market-social', title: 'Social Media', icon: <Users size={24}/>, weight: '5%', desc: 'Organic social growth tactics.' },
+  { key: 'market-report', title: 'Master Report Strategy', icon: <BarChart3 size={24}/>, weight: '2.5%', desc: 'Executive summary & data synthesis.' },
+  { key: 'market-report-pdf', title: 'PDF Layout Design', icon: <Monitor size={24}/>, weight: '2.5%', desc: 'Document structure & visual flow.' }
 ];
 
 function App() {
@@ -86,37 +88,39 @@ function App() {
 
       const skillManualsText = Object.entries(skillsData).map(([name, content]) => "=== SKILL MANUAL: " + name + " ===\n" + content + "\n").join('\n');
 
-      const prompt = `You are a suite of 12 advanced AI Marketing Agents analyzing this scraped URL text:
+      const prompt = `You are a suite of 14 advanced AI Marketing Agents analyzing this scraped URL text:
       ---
       ${payload.text}
       ---
       
-      CRITICAL INSTRUCTION: You MUST strictly base your analysis, identified issues, problems, and full solutions on the methodologies, templates, and frameworks provided in these Skill Manuals below:
+      CRITICAL INSTRUCTION: You MUST strictly base your analysis on the methodologies, templates, and frameworks provided in these Skill Manuals below:
       
       ${skillManualsText}
       
       RETURN ONLY PURE JSON. Do not return markdown blocks like "\`\`\`json".
-      You must return EXACTLY this JSON structure containing ALL 12 keys representing the 12 agents. 
-      For each agent, you must provide 'identifiedIssues' (problems found), 'proposedSolutions' (what needs to be done), and a massive 'fullStrategyDeliverable' which must contain the entire generated output requested by the SKILL.md (e.g., ad variations, email templates, full audit reports) formatted beautifully with newlines.
+      You must return EXACTLY this JSON structure containing ALL 14 keys representing the 14 agents. 
+      For each agent, you must provide 'identifiedIssues' (problems found) and 'proposedSolutions' (what needs to be done).
+      NOTE: You do NOT need to generate the massive deep-dive deliverable yet. This is just Phase 1 (Scoring and Executive High-Level).
       
       {
-        "market-audit": { "score": 85, "dimensions": [{ "name": "Strategic Alignment", "score": 85, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "The massive, comprehensive output defined in SKILL.md..." },
-        "market-ads": { "score": 75, "dimensions": [{ "name": "Ad Spend ROI", "score": 75, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "YOUR FULL AD CAMPAIGN TEXT HERE..." },
-        "market-brand": { "score": 90, "dimensions": [{ "name": "Brand Consistency", "score": 90, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
-        "market-competitors": { "score": 50, "dimensions": [{ "name": "Market Share", "score": 50, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
-        "market-copy": { "score": 80, "dimensions": [{ "name": "Messaging Clarity", "score": 80, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
-        "market-emails": { "score": 40, "dimensions": [{ "name": "Lead Nurture", "score": 40, "status": "error" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
-        "market-funnel": { "score": 70, "dimensions": [{ "name": "Conversion Rate", "score": 70, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
-        "market-landing": { "score": 85, "dimensions": [{ "name": "UX/UI", "score": 85, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
-        "market-launch": { "score": 60, "dimensions": [{ "name": "Go-to-Market", "score": 60, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
-        "market-proposal": { "score": 55, "dimensions": [{ "name": "Offer Appeal", "score": 55, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
-        "market-seo": { "score": 80, "dimensions": [{ "name": "Technical SEO", "score": 80, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." },
-        "market-social": { "score": 45, "dimensions": [{ "name": "Platform Presence", "score": 45, "status": "error" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."], "fullStrategyDeliverable": "..." }
+        "market-audit": { "score": 85, "dimensions": [{ "name": "Strategic Alignment", "score": 85, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
+        "market-ads": { "score": 75, "dimensions": [{ "name": "Ad Spend ROI", "score": 75, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
+        "market-brand": { "score": 90, "dimensions": [{ "name": "Brand Consistency", "score": 90, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
+        "market-competitors": { "score": 50, "dimensions": [{ "name": "Market Share", "score": 50, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
+        "market-copy": { "score": 80, "dimensions": [{ "name": "Messaging Clarity", "score": 80, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
+        "market-emails": { "score": 40, "dimensions": [{ "name": "Lead Nurture", "score": 40, "status": "error" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
+        "market-funnel": { "score": 70, "dimensions": [{ "name": "Conversion Rate", "score": 70, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
+        "market-landing": { "score": 85, "dimensions": [{ "name": "UX/UI", "score": 85, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
+        "market-launch": { "score": 60, "dimensions": [{ "name": "Go-to-Market", "score": 60, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
+        "market-proposal": { "score": 55, "dimensions": [{ "name": "Offer Appeal", "score": 55, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
+        "market-seo": { "score": 80, "dimensions": [{ "name": "Technical SEO", "score": 80, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
+        "market-social": { "score": 45, "dimensions": [{ "name": "Platform Presence", "score": 45, "status": "error" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
+        "market-report": { "score": 90, "dimensions": [{ "name": "Data Synthesis", "score": 90, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
+        "market-report-pdf": { "score": 85, "dimensions": [{ "name": "Visual Hierarchy", "score": 85, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] }
       }
       Rules:
       - Score must be an integer between 0 and 100.
-      - Provide exactly 3 identifiedIssues and 3 proposedSolutions per category.
-      - CRITICAL: 'fullStrategyDeliverable' MUST be a massive, multi-paragraph string containing the full, unabridged solution demanded by the SKILL.md. If the skill asks for 3 ad variations, put them here. If it asks for 5 email sequences, put them here. Do not summarize! Provide the actual work.`;
+      - Provide exactly 3 identifiedIssues and 3 proposedSolutions per category.`;
 
       const result = await model.generateContent(prompt);
       let outputText = result.response.text();
@@ -149,7 +153,7 @@ function App() {
       else if (composite >= 40) grade = "C";
       else if (composite >= 25) grade = "D";
 
-      setResults({ stats, composite, grade, url });
+      setResults({ stats, composite, grade, url, urlText: payload.text, apiKey: payload.key });
     } catch (err) {
       clearInterval(interval);
       alert("Failed to connect to backend: " + err.message);
@@ -202,10 +206,70 @@ function App() {
   };
 
   const getStatusIcon = (status) => {
-    if (status === 'good') return <CheckCircle2 className="text-success" size={18} />;
-    if (status === 'warning') return <Info className="text-warning" size={18} />;
-    return <AlertTriangle className="text-danger" size={18} />;
-  }
+    if (status === 'good') return <CheckCircle2 size={16} className="text-success" />;
+    if (status === 'warning') return <AlertTriangle size={16} className="text-warning" />;
+    return <XCircle size={16} className="text-danger" />;
+  };
+
+  const handleDeepDive = async (agentKey) => {
+    if (!results || !results.urlText) return;
+    
+    // Set loading state for this specific agent
+    setResults(prev => ({
+      ...prev,
+      stats: {
+        ...prev.stats,
+        [agentKey]: { ...prev.stats[agentKey], isGeneratingDeepDive: true }
+      }
+    }));
+
+    try {
+      const genAI = new GoogleGenerativeAI(results.apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+      
+      const skillManual = skillsData[agentKey];
+      
+      const prompt = `You are the ultimate ${agentKey} Marketing Agent.
+      You are running a Deep Dive Strategy Execution on the following scraped website data:
+      ---
+      ${results.urlText}
+      ---
+      
+      CRITICAL INSTRUCTION: You MUST execute the EXACT workflow and provide the EXACT output demanded by your Master Skill Manual below. 
+      DO NOT SUMMARIZE. DO NOT SHORTEN. DO NOT OMIT ANYTHING.
+      If the manual asks for 3 ad variations, write all 3. If it asks for an ASCII map, draw it. If it asks for email sequences, write the full emails.
+      This is a multi-thousand word deep dive. Output ONLY RAW MARKDOWN.
+      
+      === YOUR MASTER SKILL MANUAL ===
+      ${skillManual}
+      `;
+
+      const aiResult = await model.generateContent(prompt);
+      let outputText = aiResult.response.text();
+
+      setResults(prev => ({
+        ...prev,
+        stats: {
+          ...prev.stats,
+          [agentKey]: { 
+            ...prev.stats[agentKey], 
+            fullStrategyDeliverable: outputText,
+            isGeneratingDeepDive: false 
+          }
+        }
+      }));
+    } catch (err) {
+      console.error("Deep Dive Error:", err);
+      alert("Failed to generate deep dive. Check console.");
+      setResults(prev => ({
+        ...prev,
+        stats: {
+          ...prev.stats,
+          [agentKey]: { ...prev.stats[agentKey], isGeneratingDeepDive: false }
+        }
+      }));
+    }
+  };
 
   return (
     <>
@@ -274,7 +338,7 @@ function App() {
             <div className="mb-6 flex justify-between items-center html2pdf__page-break" style={{ flexWrap: 'wrap', gap: '1rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
               <div>
                 <h2 className="text-2xl font-bold">Executive Audit: <span className="text-primary">{results.url}</span></h2>
-                <p className="text-secondary">Comprehensive 12-dimensional analysis driven by Master Skill Methodologies</p>
+                <p className="text-secondary">Comprehensive 14-dimensional analysis driven by Master Skill Methodologies</p>
               </div>
               
               <div style={{ display: 'flex', gap: '1rem' }}>
@@ -355,6 +419,8 @@ function App() {
                       identifiedIssues={data.identifiedIssues || []}
                       proposedSolutions={data.proposedSolutions || []}
                       fullStrategyDeliverable={data.fullStrategyDeliverable}
+                      isGeneratingDeepDive={data.isGeneratingDeepDive}
+                      onDeepDive={() => handleDeepDive(agent.key)}
                       getStatusIcon={getStatusIcon}
                     />
                   )
@@ -418,9 +484,9 @@ function AgentCard({ title, score, icon, weight, type, desc, onClick }) {
   );
 }
 
-export function DetailedRow({ id, title, score, type, icon, dimensions, identifiedIssues, proposedSolutions, fullStrategyDeliverable, getStatusIcon }) {
+export function DetailedRow({ id, title, score, type, icon, dimensions, identifiedIssues, proposedSolutions, fullStrategyDeliverable, isGeneratingDeepDive, onDeepDive, getStatusIcon }) {
   return (
-    <div id={id} className={`glass-card p-6 flex-col ${type}`} style={{ display: 'flex', gap: '1.25rem', borderLeft: '4px solid var(--agent-color)', scrollMarginTop: '20px' }}>
+    <div id={id} className={`glass-card p-6 flex-col ${type} html2pdf__page-break`} style={{ display: 'flex', gap: '1.25rem', borderLeft: '4px solid var(--agent-color)', scrollMarginTop: '20px' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -461,7 +527,38 @@ export function DetailedRow({ id, title, score, type, icon, dimensions, identifi
         </div>
       </div>
       
-      {/* Full Deliverable Rendered */}
+      {/* Deep Dive Render Section */}
+      {!fullStrategyDeliverable && (
+        <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center' }}>
+          <button 
+            onClick={onDeepDive}
+            disabled={isGeneratingDeepDive}
+            className="btn-outline" 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: '0.75rem', 
+              borderColor: 'var(--agent-color)', 
+              color: 'var(--agent-color)',
+              maxWidth: '300px'
+            }}
+          >
+            {isGeneratingDeepDive ? (
+              <>
+                <div className="spinner" style={{ width: '20px', height: '20px', margin: 0, borderTopColor: 'var(--agent-color)' }}></div>
+                Executing Deep Dive...
+              </>
+            ) : (
+              <>
+                <Zap size={18} />
+                Generate Deep Strategy Deliverable
+              </>
+            )}
+          </button>
+        </div>
+      )}
+
       {fullStrategyDeliverable && (
         <div style={{ marginTop: '1rem', background: 'rgba(0,0,0,0.2)', padding: '2rem', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
           <h4 className="text-md font-bold mb-4 uppercase tracking-wider" style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
