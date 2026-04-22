@@ -6,6 +6,8 @@ import {
   Briefcase, Mail, Megaphone, Monitor, Users, BarChart3, Presentation, Globe
 } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { skillsData } from '../api/skillsData.js';
 
 // 15 Agent Configuration
 const AGENTS_CONFIG = [
@@ -65,35 +67,82 @@ function App() {
         body: JSON.stringify({ url })
       });
       
-      const stats = await response.json();
+      const payload = await response.json();
       
+      if (!response.ok) {
+        clearInterval(interval);
+        alert("Error scraping URL: " + (payload.error || "Unknown error"));
+        setIsScanning(false);
+        return;
+      }
+
+      setScanStep(2); // Start analyzing
+      
+      const genAI = new GoogleGenerativeAI(payload.key);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+      const prompt = `You are a suite of 15 advanced AI Agents analyzing this scraped URL text:
+      ---
+      ${payload.text}
+      ---
+      
+      CRITICAL INSTRUCTION: You MUST strictly base your analysis, findings, and quickWins on the detailed methodologies, templates, and frameworks provided in these Skill Manuals below:
+      
+      ${Object.entries(skillsData).map(([name, content]) => \`=== SKILL MANUAL: ${name} ===\\n${content}\\n\`).join('\\n')}
+      
+      RETURN ONLY PURE JSON. Do not return markdown blocks like "\`\`\`json".
+      You must return EXACTLY this JSON structure containing ALL 15 keys below. Replace the example values with your actual detailed, management-level analysis based on the live data scraped above AND the methodologies defined in the Skill Manuals. Each agent MUST provide deep, professional insights:
+      {
+        "audit": { "score": 85, "dimensions": [{ "name": "Strategic Alignment", "score": 85, "status": "good" }], "findings": ["..."], "quickWins": ["..."] },
+        "brand": { "score": 75, "dimensions": [{ "name": "Brand Consistency", "score": 75, "status": "warning" }], "findings": ["..."], "quickWins": ["..."] },
+        "copy": { "score": 90, "dimensions": [{ "name": "Messaging Clarity", "score": 90, "status": "good" }], "findings": ["..."], "quickWins": ["..."] },
+        "emails": { "score": 50, "dimensions": [{ "name": "Lead Nurture", "score": 50, "status": "warning" }], "findings": ["..."], "quickWins": ["..."] },
+        "social": { "score": 80, "dimensions": [{ "name": "Platform Presence", "score": 80, "status": "good" }], "findings": ["..."], "quickWins": ["..."] },
+        "ads": { "score": 40, "dimensions": [{ "name": "Ad Spend ROI", "score": 40, "status": "error" }], "findings": ["..."], "quickWins": ["..."] },
+        "funnel": { "score": 70, "dimensions": [{ "name": "Conversion Rate", "score": 70, "status": "warning" }], "findings": ["..."], "quickWins": ["..."] },
+        "competitors": { "score": 85, "dimensions": [{ "name": "Market Share", "score": 85, "status": "good" }], "findings": ["..."], "quickWins": ["..."] },
+        "landing": { "score": 60, "dimensions": [{ "name": "UX/UI", "score": 60, "status": "warning" }], "findings": ["..."], "quickWins": ["..."] },
+        "launch": { "score": 55, "dimensions": [{ "name": "Go-to-Market", "score": 55, "status": "warning" }], "findings": ["..."], "quickWins": ["..."] },
+        "proposal": { "score": 80, "dimensions": [{ "name": "Offer Appeal", "score": 80, "status": "good" }], "findings": ["..."], "quickWins": ["..."] },
+        "seo": { "score": 45, "dimensions": [{ "name": "Technical SEO", "score": 45, "status": "error" }], "findings": ["..."], "quickWins": ["..."] },
+        "reputation": { "score": 95, "dimensions": [{ "name": "Review Sentiment", "score": 95, "status": "good" }], "findings": ["..."], "quickWins": ["..."] },
+        "sales": { "score": 85, "dimensions": [{ "name": "Lead Qualification", "score": 85, "status": "good" }], "findings": ["..."], "quickWins": ["..."] },
+        "legal": { "score": 30, "dimensions": [{ "name": "GDPR Compliance", "score": 30, "status": "error" }], "findings": ["..."], "quickWins": ["..."] }
+      }
+      Rules:
+      - Score must be an integer between 0 and 100.
+      - Status must be exactly one of: "good", "warning", "error".
+      - Provide exactly 3 dimensions per category.
+      - CRITICAL: Provide exactly 3 findings and 3 quickWins per category. DO NOT use short bullet points. Every single finding and quickWin MUST be a highly detailed, 3-to-4 sentence paragraph. You MUST explicitly apply the specific frameworks, scoring rubrics, copy formulas, ad variations, or email sequence templates defined in the Skill Manuals for that specific agent. The user expects to see the actual deep output (like actual headline variations, actual ad copy, actual email subjects) directly inside the findings and quickWins text.`;
+
+      const result = await model.generateContent(prompt);
+      let outputText = result.response.text();
+      outputText = outputText.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+      const stats = JSON.parse(outputText);
+
       clearInterval(interval);
       setScanStep(3);
 
-      if (response.ok) {
-        let totalScore = 0;
-        let validAgents = 0;
-        
-        AGENTS_CONFIG.forEach(agent => {
-          if (stats[agent.key] && typeof stats[agent.key].score === 'number') {
-            totalScore += stats[agent.key].score;
-            validAgents++;
-          }
-        });
+      let totalScore = 0;
+      let validAgents = 0;
+      
+      AGENTS_CONFIG.forEach(agent => {
+        if (stats[agent.key] && typeof stats[agent.key].score === 'number') {
+          totalScore += stats[agent.key].score;
+          validAgents++;
+        }
+      });
 
-        const composite = validAgents > 0 ? Math.round(totalScore / validAgents) : 0;
-        
-        let grade = "F";
-        if (composite >= 85) grade = "A+";
-        else if (composite >= 70) grade = "A";
-        else if (composite >= 55) grade = "B";
-        else if (composite >= 40) grade = "C";
-        else if (composite >= 25) grade = "D";
+      const composite = validAgents > 0 ? Math.round(totalScore / validAgents) : 0;
+      
+      let grade = "F";
+      if (composite >= 85) grade = "A+";
+      else if (composite >= 70) grade = "A";
+      else if (composite >= 55) grade = "B";
+      else if (composite >= 40) grade = "C";
+      else if (composite >= 25) grade = "D";
 
-        setResults({ stats, composite, grade, url });
-      } else {
-        alert("Error analyzing URL: " + (stats.error || "Unknown error"));
-      }
+      setResults({ stats, composite, grade, url });
     } catch (err) {
       clearInterval(interval);
       alert("Failed to connect to backend: " + err.message);
