@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
+import { skillsData } from './skillsData.js';
 export default async function handler(req, res) {
   // CORS configuration for Vercel
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -49,8 +49,13 @@ export default async function handler(req, res) {
     ---
     ${textContent}
     ---
+    
+    CRITICAL INSTRUCTION: You MUST strictly base your analysis, findings, and quickWins on the detailed methodologies, templates, and frameworks provided in these Skill Manuals below:
+    
+    ${Object.entries(skillsData).map(([name, content]) => `=== SKILL MANUAL: ${name} ===\n${content}\n`).join('\n')}
+    
     RETURN ONLY PURE JSON. Do not return markdown blocks like "\`\`\`json".
-    You must return EXACTLY this JSON structure containing ALL 15 keys below. Replace the example values with your actual detailed, management-level analysis based on the live data scraped above. Each agent MUST provide deep, professional insights:
+    You must return EXACTLY this JSON structure containing ALL 15 keys below. Replace the example values with your actual detailed, management-level analysis based on the live data scraped above AND the methodologies defined in the Skill Manuals. Each agent MUST provide deep, professional insights:
     {
       "audit": { "score": 85, "dimensions": [{ "name": "Strategic Alignment", "score": 85, "status": "good" }], "findings": ["..."], "quickWins": ["..."] },
       "brand": { "score": 75, "dimensions": [{ "name": "Brand Consistency", "score": 75, "status": "warning" }], "findings": ["..."], "quickWins": ["..."] },
