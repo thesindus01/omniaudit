@@ -358,11 +358,21 @@ header {
 }
 
 /* Specific Agent Colors */
-.agent-marketing { --agent-color: var(--accent-pink); }
-.agent-sales { --agent-color: var(--accent-blue); }
-.agent-legal { --agent-color: var(--warning); }
-.agent-reputation { --agent-color: var(--accent-purple); }
+.agent-audit { --agent-color: var(--primary); }
+.agent-brand { --agent-color: var(--accent-purple); }
+.agent-copy { --agent-color: var(--accent-blue); }
+.agent-emails { --agent-color: var(--accent-orange); }
+.agent-social { --agent-color: var(--accent-pink); }
+.agent-ads { --agent-color: #f43f5e; } /* rose */
+.agent-funnel { --agent-color: var(--accent-teal); }
+.agent-competitors { --agent-color: var(--warning); }
+.agent-landing { --agent-color: var(--success); }
+.agent-launch { --agent-color: #6366f1; } /* indigo */
+.agent-proposal { --agent-color: var(--accent-blue); }
 .agent-seo { --agent-color: var(--accent-teal); }
+.agent-reputation { --agent-color: var(--accent-purple); }
+.agent-sales { --agent-color: var(--accent-orange); }
+.agent-legal { --agent-color: var(--warning); }
 
 .agent-icon-wrapper {
   background: color-mix(in srgb, var(--agent-color) 15%, transparent);

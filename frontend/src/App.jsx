@@ -2,144 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { 
   Search, Cpu, LineChart, Shield, TrendingUp, Scale, 
   Check, ArrowRight, Activity, Target, Zap, AlertTriangle, 
-  Info, CheckCircle2, Download, FileText, Radar
+  Info, CheckCircle2, Download, FileText, Radar, LayoutTemplate, 
+  Briefcase, Mail, Megaphone, Monitor, Users, BarChart3, Presentation, Globe
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 
-// Dynamic Agent Data Generator matching the exact AI Agency Command Center specifications
-const generateAgentStats = () => {
-  const getScore = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-  
-  const getStatus = (score) => {
-    if (score >= 80) return 'good';
-    if (score >= 50) return 'warning';
-    return 'error';
-  };
-
-  const genDimension = (name, min = 30, max = 90) => {
-    const s = getScore(min, max);
-    return { name, score: s, status: getStatus(s) };
-  };
-
-  const mktgDims = [
-    genDimension("Messaging & Copy Quality"),
-    genDimension("Conversion Elements"),
-    genDimension("SEO Fundamentals"),
-    genDimension("Content Strategy"),
-    genDimension("Competitive Positioning")
-  ];
-  
-  const repDims = [
-    genDimension("Review Volume & Rating"),
-    genDimension("Sentiment Patterns"),
-    genDimension("Response Management"),
-    genDimension("Competitive Reputation"),
-    genDimension("Crisis Vulnerability") // higher is better
-  ];
-
-  const seoDims = [
-    genDimension("AI Citability"),
-    genDimension("AI Crawler Access", 60, 100),
-    genDimension("Schema & Structured Data"),
-    genDimension("Content Structure for AI"),
-    genDimension("Platform Readiness")
-  ];
-
-  const salesDims = [
-    genDimension("Company Fit"),
-    genDimension("Digital Maturity Gap"),
-    genDimension("Decision Maker Accessibility"),
-    genDimension("Budget Indicators"),
-    genDimension("Timing & Urgency")
-  ];
-
-  const legalDims = [
-    genDimension("Privacy Policy"),
-    genDimension("Terms of Service"),
-    genDimension("Cookie & Tracking Compliance"),
-    genDimension("ADA/Accessibility"),
-    genDimension("Data Collection Practices")
-  ];
-
-  const mktgAvg = Math.round(mktgDims.reduce((acc, curr) => acc + curr.score, 0) / 5);
-  const repAvg = Math.round(repDims.reduce((acc, curr) => acc + curr.score, 0) / 5);
-  const seoAvg = Math.round(seoDims.reduce((acc, curr) => acc + curr.score, 0) / 5);
-  const salesAvg = Math.round(salesDims.reduce((acc, curr) => acc + curr.score, 0) / 5);
-  const legalAvg = Math.round(legalDims.reduce((acc, curr) => acc + curr.score, 0) / 5);
-
-  return {
-    marketing: { 
-      score: mktgAvg, 
-      dimensions: mktgDims,
-      findings: [
-        "Primary CTA is not visible above the fold on mobile devices.",
-        "Value proposition is generic and lacks specific proof points.",
-        "Meta descriptions are missing on 40% of key service pages."
-      ],
-      quickWins: [
-        "Add a sticky 'Call Now' button to the mobile experience.",
-        "Rewrite the homepage headline to focus on a specific customer benefit.",
-        "Add 3 customer testimonials with photos right below the hero section."
-      ]
-    },
-    sales: { 
-      score: salesAvg, 
-      dimensions: salesDims,
-      findings: [
-        "Decision makers are easily identifiable on LinkedIn.",
-        "Strong budget indicators but obvious gaps in current digital strategy.",
-        "Competitors are aggressively outspending them on Ads."
-      ],
-      quickWins: [
-        "Reach out specifically highlighting their outdated UI compared to rivals.",
-        "Pitch an entry-level 'Audit Fix' package based on immediate SEO errors.",
-        "Use LinkedIn connection request focused on their recent company milestone."
-      ]
-    },
-    reputation: { 
-      score: repAvg, 
-      dimensions: repDims,
-      findings: [
-        "No response to 12 negative Google reviews from the past 6 months.",
-        "Sentiment analysis shows recurring complaints about response times.",
-        "Competitors have 3x the average review volume."
-      ],
-      quickWins: [
-        "Draft professional, empathetic responses to all negative Google reviews.",
-        "Implement an automated email sequence to ask happy customers for reviews.",
-        "Claim completely unmanaged Yelp and Apple Maps profiles."
-      ]
-    },
-    seo: { 
-      score: seoAvg, 
-      dimensions: seoDims,
-      findings: [
-        "Total absence of LocalBusiness JSON-LD schema markup.",
-        "Content lacks quotable statistics and structured data for AI.",
-        "Robots.txt is partially blocking Anthropic and OpenAI crawlers."
-      ],
-      quickWins: [
-        "Generate and inject basic JSON-LD organization schema to the homepage.",
-        "Update robots.txt to explicitly allow GPTBot and ClaudeBot.",
-        "Add an 'FAQ' section to key service pages to improve AI citability."
-      ]
-    },
-    legal: { 
-      score: legalAvg, 
-      dimensions: legalDims,
-      findings: [
-        "Privacy policy is outdated and lacks GDPR/CCPA specific clauses.",
-        "Cookie consent banner is missing opt-out mechanism.",
-        "Key landing pages have critical ADA contrast ratio failures."
-      ],
-      quickWins: [
-        "Install a compliant one-click Cookie Consent manager.",
-        "Update primary button and text colors to meet WCAG AA contrast standards.",
-        "Generate a modern Privacy Policy using a legal template generator."
-      ]
-    }
-  };
-};
+// 15 Agent Configuration
+const AGENTS_CONFIG = [
+  { key: 'audit', title: 'Overall Strategy', icon: <Target size={24}/>, weight: '10%', desc: 'High-level business audit.' },
+  { key: 'brand', title: 'Brand & Positioning', icon: <Briefcase size={24}/>, weight: '5%', desc: 'Brand identity & consistency.' },
+  { key: 'copy', title: 'Copy & Messaging', icon: <FileText size={24}/>, weight: '10%', desc: 'Value prop & copywriting.' },
+  { key: 'emails', title: 'Email Marketing', icon: <Mail size={24}/>, weight: '5%', desc: 'Nurture & automation.' },
+  { key: 'social', title: 'Social Media', icon: <Users size={24}/>, weight: '5%', desc: 'Organic social presence.' },
+  { key: 'ads', title: 'Paid Acquisition', icon: <Megaphone size={24}/>, weight: '10%', desc: 'ROAS & paid strategies.' },
+  { key: 'funnel', title: 'Sales Funnel', icon: <Activity size={24}/>, weight: '10%', desc: 'Conversion pathways.' },
+  { key: 'competitors', title: 'Competitor Intel', icon: <Radar size={24}/>, weight: '5%', desc: 'Market share & gaps.' },
+  { key: 'landing', title: 'Landing Pages', icon: <LayoutTemplate size={24}/>, weight: '5%', desc: 'UX/UI & conversion.' },
+  { key: 'launch', title: 'Campaign Launch', icon: <Zap size={24}/>, weight: '5%', desc: 'Go-to-market strategies.' },
+  { key: 'proposal', title: 'Proposal & Pricing', icon: <Presentation size={24}/>, weight: '5%', desc: 'Offer appeal & pricing.' },
+  { key: 'seo', title: 'GEO & SEO', icon: <Globe size={24}/>, weight: '10%', desc: 'Search visibility.' },
+  { key: 'reputation', title: 'Reputation', icon: <Shield size={24}/>, weight: '5%', desc: 'Reviews & sentiment.' },
+  { key: 'sales', title: 'Sales Intel', icon: <BarChart3 size={24}/>, weight: '5%', desc: 'Lead qualification.' },
+  { key: 'legal', title: 'Compliance', icon: <Scale size={24}/>, weight: '5%', desc: 'GDPR, CCPA & accessibility.' }
+];
 
 function App() {
   const [url, setUrl] = useState('');
@@ -149,7 +34,7 @@ function App() {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [pdfReady, setPdfReady] = useState(false);
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault();
     if (!url) return;
     
@@ -159,10 +44,10 @@ function App() {
     setPdfReady(false);
 
     const phases = [
-      "Phase 1 — Discovery & Crawling...",
-      "Phase 2 — Launching 5 parallel Gemini audit teams...",
+      "Phase 1 — Discovery & Live Crawling...",
+      "Phase 2 — Launching 15 parallel Gemini audit teams...",
       "Phase 3 — Compiling Composite Data...",
-      "Phase 4 — Evaluating 25 KPI Dimensions..."
+      "Phase 4 — Evaluating 45+ KPI Dimensions..."
     ];
 
     let currentStep = 0;
@@ -170,17 +55,33 @@ function App() {
       currentStep++;
       if (currentStep < phases.length) {
         setScanStep(currentStep);
-      } else {
-        clearInterval(interval);
-        const stats = generateAgentStats();
-        // Weights: Marketing(25%), Sales(20%), Reputation(20%), SEO(20%), Legal(15%)
-        const composite = Math.round(
-          (stats.marketing.score * 0.25) + 
-          (stats.reputation.score * 0.20) + 
-          (stats.seo.score * 0.20) + 
-          (stats.legal.score * 0.15) + 
-          (stats.sales.score * 0.20)
-        );
+      }
+    }, 2500);
+
+    try {
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+      
+      const stats = await response.json();
+      
+      clearInterval(interval);
+      setScanStep(3);
+
+      if (response.ok) {
+        let totalScore = 0;
+        let validAgents = 0;
+        
+        AGENTS_CONFIG.forEach(agent => {
+          if (stats[agent.key] && typeof stats[agent.key].score === 'number') {
+            totalScore += stats[agent.key].score;
+            validAgents++;
+          }
+        });
+
+        const composite = validAgents > 0 ? Math.round(totalScore / validAgents) : 0;
         
         let grade = "F";
         if (composite >= 85) grade = "A+";
@@ -190,9 +91,15 @@ function App() {
         else if (composite >= 25) grade = "D";
 
         setResults({ stats, composite, grade, url });
-        setIsScanning(false);
+      } else {
+        alert("Error analyzing URL: " + (stats.error || "Unknown error"));
       }
-    }, 1500);
+    } catch (err) {
+      clearInterval(interval);
+      alert("Failed to connect to backend: " + err.message);
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   const handleDownloadPdf = () => {
@@ -201,79 +108,197 @@ function App() {
     
     setTimeout(() => {
       try {
-        const doc = new jsPDF();
-        let yPos = 20;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
         
-        // Title
-        doc.setFontSize(22);
+        // --- COVER PAGE ---
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 0, pageWidth, pageHeight, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(40);
+        doc.setFont("helvetica", "bold");
+        doc.text("OMNIAUDIT AI", pageWidth / 2, 80, { align: 'center' });
+        
         doc.setTextColor(59, 130, 246);
-        doc.text("OmniAudit (Powered by Gemini)", 20, yPos);
-        yPos += 10;
-        
-        // Subtitle
-        doc.setFontSize(16);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`Official Audit Report for: ${results.url}`, 20, yPos);
-        yPos += 15;
-        
-        // Composite
-        doc.setFontSize(14);
-        doc.text(`Composite Score: ${results.composite} / 100`, 20, yPos);
-        yPos += 8;
-        doc.text(`Grade: ${results.grade}`, 20, yPos);
-        yPos += 15;
-        
-        // Loop through agents
-        const agents = [
-          { name: 'Marketing Agent', data: results.stats.marketing },
-          { name: 'Reputation Agent', data: results.stats.reputation },
-          { name: 'GEO/SEO Agent', data: results.stats.seo },
-          { name: 'Sales Intelligence', data: results.stats.sales },
-          { name: 'Legal Compliance', data: results.stats.legal }
-        ];
+        doc.setFontSize(22);
+        doc.text("EXECUTIVE INTELLIGENCE REPORT", pageWidth / 2, 100, { align: 'center' });
 
-        agents.forEach((agent) => {
-          if (yPos > 260) {
-            doc.addPage();
-            yPos = 20;
-          }
+        doc.setTextColor(200, 200, 200);
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Target Asset: ${results.url}`, pageWidth / 2, 130, { align: 'center' });
+        doc.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth / 2, 140, { align: 'center' });
+
+        doc.setFillColor(59, 130, 246);
+        doc.rect(pageWidth / 2 - 45, 165, 90, 35, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(24);
+        doc.setFont("helvetica", "bold");
+        doc.text(`COMPOSITE: ${results.composite}/100`, pageWidth / 2, 188, { align: 'center' });
+
+        // --- EXECUTIVE SUMMARY PAGE ---
+        doc.addPage();
+        doc.setFillColor(255, 255, 255);
+        doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+        let yPos = 30;
+        doc.setTextColor(15, 23, 42);
+        doc.setFontSize(26);
+        doc.setFont("helvetica", "bold");
+        doc.text("Executive Summary", 20, yPos);
+        
+        doc.setLineWidth(1);
+        doc.setDrawColor(59, 130, 246);
+        doc.line(20, yPos + 5, 190, yPos + 5);
+        
+        yPos += 20;
+
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        const summaryText = doc.splitTextToSize(`This document contains a comprehensive 15-dimensional AI audit of ${results.url}. It is intended for executive management to review critical business intelligence, identify immediate operational vulnerabilities, and execute on high-ROI strategic improvements across all digital departments.`, 170);
+        doc.text(summaryText, 20, yPos);
+        yPos += 30;
+
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        doc.text("Domain Performance Matrix", 20, yPos);
+        yPos += 15;
+        
+        AGENTS_CONFIG.forEach((agent, i) => {
+          const data = results.stats[agent.key];
+          if (!data) return;
           
-          doc.setFontSize(14);
-          doc.setTextColor(59, 130, 246);
-          doc.text(`--- ${agent.name} [Score: ${agent.data.score}/100] ---`, 20, yPos);
-          yPos += 8;
+          const col = i % 2;
+          const row = Math.floor(i / 2);
+          const x = 20 + (col * 85);
+          const y = yPos + (row * 15);
           
-          doc.setFontSize(12);
-          doc.setTextColor(0, 0, 0);
-          doc.text("Critical Findings:", 20, yPos);
-          yPos += 6;
+          doc.setFontSize(11);
+          doc.setFont("helvetica", "bold");
+          doc.setTextColor(70, 70, 70);
+          doc.text(agent.title.toUpperCase(), x, y);
           
-          doc.setFontSize(10);
-          agent.data.findings.forEach((finding, idx) => {
-            const wrappedText = doc.splitTextToSize(`• ${finding}`, 170);
-            doc.text(wrappedText, 25, yPos);
-            yPos += (wrappedText.length * 5) + 2;
-          });
+          if (data.score >= 80) doc.setTextColor(34, 197, 94);
+          else if (data.score >= 50) doc.setTextColor(234, 179, 8);
+          else doc.setTextColor(239, 68, 68);
           
-          yPos += 4;
-          
-          doc.setFontSize(12);
-          doc.setTextColor(0, 0, 0);
-          doc.text("Quick Wins (Improvements):", 20, yPos);
-          yPos += 6;
-          
-          doc.setFontSize(10);
-          agent.data.quickWins.forEach((win, idx) => {
-            const wrappedText = doc.splitTextToSize(`• ${win}`, 170);
-            doc.text(wrappedText, 25, yPos);
-            yPos += (wrappedText.length * 5) + 2;
-          });
-          
-          yPos += 8;
+          doc.text(`${data.score}/100`, x + 75, y, { align: 'right' });
         });
 
-        // Save PDF
-        doc.save(`AGENCY-REPORT-${results.url.replace(/https?:\/\//, '').replace(/\//g, '')}.pdf`);
+        // --- DETAILED AGENT PAGES ---
+        AGENTS_CONFIG.forEach((agent) => {
+          const data = results.stats[agent.key];
+          if (!data) return;
+
+          doc.addPage();
+          
+          // Header Bar
+          doc.setFillColor(15, 23, 42);
+          doc.rect(0, 0, pageWidth, 40, 'F');
+          
+          doc.setFontSize(24);
+          doc.setFont("helvetica", "bold");
+          doc.setTextColor(255, 255, 255);
+          doc.text(`${agent.title.toUpperCase()}`, 20, 27);
+          
+          // Score Badge
+          if (data.score >= 80) doc.setFillColor(34, 197, 94);
+          else if (data.score >= 50) doc.setFillColor(234, 179, 8);
+          else doc.setFillColor(239, 68, 68);
+          
+          doc.rect(160, 10, 35, 20, 'F');
+          doc.setFontSize(18);
+          doc.setTextColor(255, 255, 255);
+          doc.text(`${data.score}/100`, 177.5, 25, { align: 'center' });
+
+          yPos = 55;
+
+          // Critical Findings (Red Box)
+          let findingHeight = 20 + (data.findings.length * 12);
+          doc.setFillColor(254, 242, 242);
+          doc.setDrawColor(252, 165, 165);
+          doc.rect(20, yPos, 170, findingHeight, 'FD');
+          
+          doc.setTextColor(220, 38, 38);
+          doc.setFontSize(14);
+          doc.setFont("helvetica", "bold");
+          doc.text("CRITICAL FINDINGS & VULNERABILITIES", 25, yPos + 10);
+          
+          doc.setTextColor(0, 0, 0);
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "normal");
+          let currentY = yPos + 20;
+          data.findings.forEach(finding => {
+            const wrappedText = doc.splitTextToSize(`• ${finding}`, 160);
+            doc.text(wrappedText, 25, currentY);
+            currentY += (wrappedText.length * 5) + 3;
+          });
+
+          yPos = yPos + findingHeight + 10;
+
+          // Quick Wins (Yellow Box)
+          let winsHeight = 20 + (data.quickWins.length * 12);
+          doc.setFillColor(254, 252, 232);
+          doc.setDrawColor(253, 224, 71);
+          doc.rect(20, yPos, 170, winsHeight, 'FD');
+          
+          doc.setTextColor(161, 98, 7);
+          doc.setFontSize(14);
+          doc.setFont("helvetica", "bold");
+          doc.text("STRATEGIC QUICK WINS", 25, yPos + 10);
+          
+          doc.setTextColor(0, 0, 0);
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "normal");
+          currentY = yPos + 20;
+          data.quickWins.forEach(win => {
+            const wrappedText = doc.splitTextToSize(`• ${win}`, 160);
+            doc.text(wrappedText, 25, currentY);
+            currentY += (wrappedText.length * 5) + 3;
+          });
+
+          yPos = yPos + winsHeight + 15;
+
+          // Dimensions Matrix
+          doc.setTextColor(15, 23, 42);
+          doc.setFontSize(16);
+          doc.setFont("helvetica", "bold");
+          doc.text("KPI DIMENSIONS", 20, yPos);
+          yPos += 12;
+
+          data.dimensions.forEach((dim) => {
+            if(yPos > 270) {
+              doc.addPage();
+              yPos = 20;
+            }
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(70, 70, 70);
+            doc.text(dim.name, 20, yPos);
+            
+            if (dim.status === 'good') doc.setTextColor(34, 197, 94);
+            else if (dim.status === 'warning') doc.setTextColor(234, 179, 8);
+            else doc.setTextColor(239, 68, 68);
+            
+            doc.text(`${dim.score}/100`, 190, yPos, { align: 'right' });
+            
+            // Progress bar
+            doc.setFillColor(226, 232, 240);
+            doc.rect(20, yPos + 3, 170, 4, 'F');
+            
+            if (dim.status === 'good') doc.setFillColor(34, 197, 94);
+            else if (dim.status === 'warning') doc.setFillColor(234, 179, 8);
+            else doc.setFillColor(239, 68, 68);
+            
+            doc.rect(20, yPos + 3, (170 * dim.score) / 100, 4, 'F');
+            
+            yPos += 15;
+          });
+        });
+
+        doc.save(`OMNIAUDIT-EXECUTIVE-${results.url.replace(/https?:\/\//, '').replace(/\//g, '')}.pdf`);
         
         setIsGeneratingPdf(false);
         setPdfReady(true);
@@ -319,8 +344,8 @@ function App() {
               OmniAudit <br/> 360&deg; Business Intelligence
             </h1>
             <p className="text-secondary text-lg mb-8 max-w-2xl mx-auto">
-              Deploy 5 parallel Gemini agents to audit any business organically. 
-              Get a composite score, detailed KPIs, and PDF summaries in seconds.
+              Deploy 15 parallel Gemini agents to audit any business organically. 
+              Get an executive composite score, detailed KPIs, and management PDFs in seconds.
             </p>
 
             <form onSubmit={handleSearch} className="search-input-group">
@@ -342,12 +367,12 @@ function App() {
         {isScanning && (
           <div className="loader-container animate-fade-in">
             <div className="spinner"></div>
-            <h2 className="text-2xl font-bold text-gradient mb-2">Deploying AI Agents...</h2>
+            <h2 className="text-2xl font-bold text-gradient mb-2">Deploying 15 AI Agents...</h2>
             <p className="text-secondary text-lg">
-              {scanStep === 0 && "Phase 1 — Discovery & Content Extraction..."}
-              {scanStep === 1 && "Phase 2 — Launching 5 parallel audit teams..."}
+              {scanStep === 0 && "Phase 1 — Discovery & Live Crawling..."}
+              {scanStep === 1 && "Phase 2 — Launching 15 parallel audit teams..."}
               {scanStep === 2 && "Phase 3 — Calculating composite scoring..."}
-              {scanStep === 3 && "Phase 4 — Evaluating 25 KPI Dimensions..."}
+              {scanStep === 3 && "Phase 4 — Evaluating 45+ KPI Dimensions..."}
             </p>
           </div>
         )}
@@ -357,7 +382,7 @@ function App() {
             <div className="mb-6 flex justify-between items-center" style={{ flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h2 className="text-2xl font-bold">Audit Results for <span className="text-primary">{results.url}</span></h2>
-                <p className="text-secondary">Analysis generated across 5 domains</p>
+                <p className="text-secondary">Comprehensive analysis generated across 15 intelligence domains</p>
               </div>
               
               <div style={{ display: 'flex', gap: '1rem' }}>
@@ -368,11 +393,11 @@ function App() {
                   disabled={isGeneratingPdf}
                 >
                   {isGeneratingPdf ? (
-                    <><div className="spinner" style={{ width: '16px', height: '16px', margin: 0, borderWidth: '2px' }}></div> Generating PDF...</>
+                    <><div className="spinner" style={{ width: '16px', height: '16px', margin: 0, borderWidth: '2px' }}></div> Generating Executive PDF...</>
                   ) : pdfReady ? (
-                    <><Check size={18} /> AGENCY-REPORT.pdf Ready!</>
+                    <><Check size={18} /> EXECUTIVE-REPORT.pdf Ready!</>
                   ) : (
-                    <><FileText size={18} /> Generate PDF Report</>
+                    <><FileText size={18} /> Generate Executive PDF</>
                   )}
                 </button>
                 
@@ -388,131 +413,59 @@ function App() {
                 <div className="score-circle">
                   <div className="score-grade">{results.grade}</div>
                 </div>
-                <h3 className="text-xl font-bold mb-1">Composite Score</h3>
+                <h3 className="text-xl font-bold mb-1">Executive Composite Score</h3>
                 <div className="score-number font-bold text-3xl text-gradient mb-4">{results.composite} / 100</div>
                 <p className="text-secondary text-sm px-4">
                   {results.grade === 'A+' || results.grade === 'A' ? "Excellent performance. Minor fixes needed." : 
                    results.grade === 'B' ? "Average. Significant improvement opportunities." :
-                   "Critical issues identified across multiple domains. Perfect client."}
+                   "Critical issues identified across multiple domains. Urgent action required."}
                 </p>
               </div>
 
               {/* Right Column: Agents Grid */}
-              <div className="agents-grid">
-                <AgentCard 
-                  title="Marketing Agent" 
-                  score={results.stats.marketing.score} 
-                  icon={<Target size={24}/>} 
-                  weight="25%" 
-                  type="agent-marketing"
-                  desc="Copy, SEO, funnels, ads."
-                  onClick={() => document.getElementById('details-marketing').scrollIntoView({ behavior: 'smooth' })}
-                />
-                <AgentCard 
-                  title="Reputation Agent" 
-                  score={results.stats.reputation.score} 
-                  icon={<Shield size={24}/>} 
-                  weight="20%" 
-                  type="agent-reputation"
-                  desc="Reviews, sentiment, crisis."
-                  onClick={() => document.getElementById('details-reputation').scrollIntoView({ behavior: 'smooth' })}
-                />
-                <AgentCard 
-                  title="GEO/SEO Agent" 
-                  score={results.stats.seo.score} 
-                  icon={<TrendingUp size={24}/>} 
-                  weight="20%" 
-                  type="agent-seo"
-                  desc="Local SEO, schema, keywords."
-                  onClick={() => document.getElementById('details-seo').scrollIntoView({ behavior: 'smooth' })}
-                />
-                <AgentCard 
-                  title="Sales Agent" 
-                  score={results.stats.sales.score} 
-                  icon={<Zap size={24}/>} 
-                  weight="20%" 
-                  type="agent-sales"
-                  desc="Decision makers, proposals."
-                  onClick={() => document.getElementById('details-sales').scrollIntoView({ behavior: 'smooth' })}
-                />
-                <AgentCard 
-                  title="Legal Agent" 
-                  score={results.stats.legal.score} 
-                  icon={<Scale size={24}/>} 
-                  weight="15%" 
-                  type="agent-legal"
-                  desc="GDPR, CCPA, accessibility."
-                  onClick={() => document.getElementById('details-legal').scrollIntoView({ behavior: 'smooth' })}
-                />
+              <div className="agents-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
+                {AGENTS_CONFIG.map(agent => {
+                  const data = results.stats[agent.key];
+                  if (!data) return null;
+                  return (
+                    <AgentCard 
+                      key={agent.key}
+                      title={agent.title} 
+                      score={data.score} 
+                      icon={agent.icon} 
+                      weight={agent.weight} 
+                      type={`agent-${agent.key}`}
+                      desc={agent.desc}
+                      onClick={() => document.getElementById(`details-${agent.key}`).scrollIntoView({ behavior: 'smooth' })}
+                    />
+                  )
+                })}
               </div>
             </div>
 
-            {/* Detailed KPI Section linked to Repo skills */}
+            {/* Detailed KPI Section */}
             <div className="mt-10">
-              <h2 className="text-2xl font-bold mb-6">Agent Dimension Breakdown & Critical Findings</h2>
+              <h2 className="text-2xl font-bold mb-6">Executive Breakdown & Critical Findings</h2>
               
               <div className="flex-col gap-6" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                
-                <DetailedRow 
-                  id="details-marketing"
-                  title="Marketing Audit Dimensions" 
-                  score={results.stats.marketing.score} 
-                  type="agent-marketing" 
-                  icon={<Target size={24}/>}
-                  dimensions={results.stats.marketing.dimensions}
-                  findings={results.stats.marketing.findings}
-                  quickWins={results.stats.marketing.quickWins}
-                  getStatusIcon={getStatusIcon}
-                />
-                
-                <DetailedRow 
-                  id="details-reputation"
-                  title="Reputation Audit Dimensions" 
-                  score={results.stats.reputation.score} 
-                  type="agent-reputation" 
-                  icon={<Shield size={24}/>}
-                  dimensions={results.stats.reputation.dimensions}
-                  findings={results.stats.reputation.findings}
-                  quickWins={results.stats.reputation.quickWins}
-                  getStatusIcon={getStatusIcon}
-                />
-                
-                <DetailedRow 
-                  id="details-seo"
-                  title="GEO/SEO Audit Dimensions" 
-                  score={results.stats.seo.score} 
-                  type="agent-seo" 
-                  icon={<TrendingUp size={24}/>}
-                  dimensions={results.stats.seo.dimensions}
-                  findings={results.stats.seo.findings}
-                  quickWins={results.stats.seo.quickWins}
-                  getStatusIcon={getStatusIcon}
-                />
-                
-                <DetailedRow 
-                  id="details-sales"
-                  title="Sales Intelligence Dimensions" 
-                  score={results.stats.sales.score} 
-                  type="agent-sales" 
-                  icon={<Zap size={24}/>}
-                  dimensions={results.stats.sales.dimensions}
-                  findings={results.stats.sales.findings}
-                  quickWins={results.stats.sales.quickWins}
-                  getStatusIcon={getStatusIcon}
-                />
-                
-                <DetailedRow 
-                  id="details-legal"
-                  title="Legal Compliance Dimensions" 
-                  score={results.stats.legal.score} 
-                  type="agent-legal" 
-                  icon={<Scale size={24}/>}
-                  dimensions={results.stats.legal.dimensions}
-                  findings={results.stats.legal.findings}
-                  quickWins={results.stats.legal.quickWins}
-                  getStatusIcon={getStatusIcon}
-                />
-
+                {AGENTS_CONFIG.map(agent => {
+                  const data = results.stats[agent.key];
+                  if (!data) return null;
+                  return (
+                    <DetailedRow 
+                      key={agent.key}
+                      id={`details-${agent.key}`}
+                      title={agent.title} 
+                      score={data.score} 
+                      type={`agent-${agent.key}`} 
+                      icon={agent.icon}
+                      dimensions={data.dimensions}
+                      findings={data.findings}
+                      quickWins={data.quickWins}
+                      getStatusIcon={getStatusIcon}
+                    />
+                  )
+                })}
               </div>
             </div>
 
@@ -524,7 +477,7 @@ function App() {
             &copy; {new Date().getFullYear()} Ishaq Solutions Inc&reg;. All rights reserved.
           </p>
           <p style={{ fontSize: '0.75rem', opacity: 0.7, maxWidth: '800px', margin: '0 auto', lineHeight: '1.4' }}>
-            Disclaimer: The audit insights and proposals generated by this dashboard are powered by AI for informational and strategic purposes only. The "Legal Agent" analysis provides automated compliance checks and does not constitute formal or professional legal advice. 
+            Disclaimer: The audit insights and proposals generated by this dashboard are powered by AI for informational and strategic purposes only. The "Legal & Compliance" analysis provides automated compliance checks and does not constitute formal or professional legal advice. 
           </p>
         </footer>
       </div>
@@ -546,23 +499,23 @@ function AgentCard({ title, score, icon, weight, type, desc, onClick }) {
     <div 
       className={`glass-card agent-card ${type}`} 
       onClick={onClick}
-      style={{ cursor: onClick ? 'pointer' : 'default' }}
+      style={{ cursor: onClick ? 'pointer' : 'default', padding: '1rem' }}
     >
-      <div className="agent-header">
-        <div className="agent-icon-wrapper">
+      <div className="agent-header" style={{ marginBottom: '0.5rem' }}>
+        <div className="agent-icon-wrapper" style={{ padding: '0.4rem' }}>
           {icon}
         </div>
-        <div>
-          <h3 className="font-bold text-lg leading-tight">{title}</h3>
-          <span className="text-secondary text-xs">Weight: {weight}</span>
-        </div>
-        <div className="ml-auto font-bold text-2xl" style={{ color: 'var(--agent-color)' }}>
+        <div className="ml-auto font-bold text-xl" style={{ color: 'var(--agent-color)' }}>
           {score}
         </div>
       </div>
-      <p className="text-sm text-secondary mb-4">{desc}</p>
+      <div>
+        <h3 className="font-bold text-sm leading-tight mb-1">{title}</h3>
+        <span className="text-secondary" style={{ fontSize: '0.7rem' }}>Weight: {weight}</span>
+      </div>
+      <p className="text-secondary mt-2" style={{ fontSize: '0.75rem', lineHeight: '1.2' }}>{desc}</p>
       
-      <div className="agent-score-bar relative">
+      <div className="agent-score-bar relative mt-3">
         <div 
           className="agent-score-fill"
           style={{ width: `${currentScore}%` }}
@@ -586,28 +539,28 @@ function DetailedRow({ id, title, score, type, icon, dimensions, findings, quick
       
       {/* Text Insights Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
-        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '8px' }}>
+        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
           <h4 className="text-sm font-bold text-secondary mb-3 uppercase tracking-wider" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <AlertTriangle size={16} className="text-danger" /> Critical Findings
           </h4>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem', margin: 0, padding: 0 }}>
             {findings.map((finding, idx) => (
               <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.90rem' }}>
-                <span style={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>•</span>
+                <span style={{ color: 'var(--danger)', fontWeight: 'bold' }}>•</span>
                 <span style={{ color: 'var(--text-primary)', lineHeight: '1.4' }}>{finding}</span>
               </li>
             ))}
           </ul>
         </div>
         
-        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '8px' }}>
+        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '8px', border: '1px solid rgba(234, 179, 8, 0.2)' }}>
           <h4 className="text-sm font-bold text-secondary mb-3 uppercase tracking-wider" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Zap size={16} className="text-warning" /> Quick Wins (Improvements)
+            <Zap size={16} className="text-warning" /> Strategic Quick Wins
           </h4>
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem', margin: 0, padding: 0 }}>
             {quickWins.map((win, idx) => (
               <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.90rem' }}>
-                <span style={{ color: 'var(--text-secondary)', fontWeight: 'bold' }}>•</span>
+                <span style={{ color: 'var(--warning)', fontWeight: 'bold' }}>•</span>
                 <span style={{ color: 'var(--text-primary)', lineHeight: '1.4' }}>{win}</span>
               </li>
             ))}
