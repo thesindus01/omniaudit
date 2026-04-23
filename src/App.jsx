@@ -156,7 +156,13 @@ function App() {
       - You MUST return 100% valid, parsable JSON.`;
 
       const result = await model.generateContent(prompt);
-      const outputText = result.response.text();
+      let outputText = result.response.text();
+      
+      // Robust extraction: Find the outermost JSON object to ignore any markdown or trailing garbage
+      const jsonMatch = outputText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        outputText = jsonMatch[0];
+      }
       
       const stats = JSON.parse(outputText);
 
