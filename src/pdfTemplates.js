@@ -25,27 +25,32 @@ const PDF_CSS = `
     box-sizing: border-box; 
     -webkit-print-color-adjust: exact !important; 
     color-adjust: exact !important;
+    margin: 0;
+    padding: 0;
   }
   
   html, body {
     background: white !important;
     color: ${PDF_COLORS.text} !important;
     font-family: 'Inter', -apple-system, sans-serif;
+    width: 210mm;
     margin: 0;
     padding: 0;
-    width: 210mm;
   }
 
   .pdf-container {
     background: white !important;
+    width: 210mm;
   }
 
+  /* Rigid Page Structure */
   .page {
     width: 210mm;
-    height: 296mm; /* Slightly less than A4 to prevent overflow triggers */
-    padding: 20mm 20mm 25mm 20mm;
+    height: 297mm; /* Exact A4 Height */
+    padding: 25mm 20mm;
     position: relative;
     page-break-after: always;
+    page-break-inside: avoid;
     background: white !important;
     display: flex;
     flex-direction: column;
@@ -55,70 +60,59 @@ const PDF_CSS = `
   /* Deep Dive Pages (Allow growth but maintain styling) */
   .deep-dive-page {
     height: auto !important;
-    min-height: 296mm;
+    min-height: 297mm;
+    page-break-after: auto;
+    display: block;
+    padding: 25mm 20mm;
   }
 
   /* Cover Page Design */
   .cover-page {
     background: ${PDF_COLORS.primary} !important;
     color: white !important;
-    padding: 0 20mm;
-    display: flex;
-    flex-direction: column;
     justify-content: center;
   }
 
   .cover-accent {
     width: 60mm;
-    height: 4pt;
+    height: 5pt;
     background: ${PDF_COLORS.secondary};
-    margin-bottom: 25pt;
+    margin-bottom: 30pt;
   }
 
   .logo-text {
-    font-size: 26pt;
+    font-size: 28pt;
     font-weight: 800;
     letter-spacing: -0.02em;
-    margin-bottom: 70pt;
+    margin-bottom: 80pt;
     color: white !important;
   }
 
   .cover-title {
-    font-size: 44pt;
+    font-size: 48pt;
     font-weight: 800;
-    line-height: 1.05;
-    margin-bottom: 25pt;
+    line-height: 1.0;
+    margin-bottom: 30pt;
     color: white !important;
   }
 
   .cover-subtitle {
-    font-size: 19pt;
+    font-size: 20pt;
     font-weight: 300;
     color: rgba(255,255,255,0.7) !important;
-    margin-bottom: 100pt;
+    margin-bottom: 120pt;
     max-width: 90%;
   }
 
-  .cover-footer {
-    position: absolute;
-    bottom: 25mm;
-    left: 20mm;
-    right: 20mm;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    border-top: 1pt solid rgba(255,255,255,0.2);
-    padding-top: 20pt;
-  }
-
   .cover-domain {
-    font-size: 15pt;
+    font-size: 16pt;
     font-weight: 600;
     color: white !important;
+    margin-bottom: 10pt;
   }
 
   .cover-date {
-    font-size: 10pt;
+    font-size: 11pt;
     text-transform: uppercase;
     letter-spacing: 2pt;
     color: rgba(255,255,255,0.5) !important;
@@ -126,101 +120,104 @@ const PDF_CSS = `
 
   /* Content Wrapper to push footer down */
   .content-wrap {
-    flex-grow: 1;
-    display: block;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
   }
 
   /* Section Headers */
   .section-header {
-    margin-bottom: 35pt;
-    border-bottom: 2.5pt solid ${PDF_COLORS.primary};
-    padding-bottom: 12pt;
+    margin-bottom: 40pt;
+    border-bottom: 3pt solid ${PDF_COLORS.primary};
+    padding-bottom: 15pt;
   }
 
   .section-title {
-    font-size: 26pt;
+    font-size: 28pt;
     font-weight: 800;
     color: ${PDF_COLORS.primary} !important;
-    margin-bottom: 6pt;
+    margin-bottom: 8pt;
   }
 
   .section-tagline {
-    font-size: 12pt;
+    font-size: 13pt;
     color: ${PDF_COLORS.textLight} !important;
   }
 
   /* Score Dashboard */
   .score-grid {
     display: grid;
-    grid-template-columns: 1fr 1.6fr;
-    gap: 35pt;
-    margin-bottom: 45pt;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 40pt;
+    margin-bottom: 50pt;
   }
 
   .score-card {
     background: #f8fafc !important;
-    padding: 35pt;
-    border-radius: 14pt;
+    padding: 40pt;
+    border-radius: 16pt;
     border: 1.5pt solid ${PDF_COLORS.border};
     text-align: center;
   }
 
   .score-label {
-    font-size: 10pt;
+    font-size: 11pt;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 2pt;
     color: ${PDF_COLORS.textLight} !important;
-    margin-bottom: 12pt;
+    margin-bottom: 15pt;
   }
 
   .score-value {
-    font-size: 76pt;
+    font-size: 84pt;
     font-weight: 800;
     line-height: 1;
-    margin-bottom: 12pt;
+    margin-bottom: 15pt;
   }
 
   .grade-badge {
     display: inline-block;
-    padding: 8pt 20pt;
+    padding: 10pt 25pt;
     border-radius: 50pt;
     font-weight: 800;
-    font-size: 14pt;
+    font-size: 16pt;
   }
 
   /* Summary Table */
   .summary-table {
     width: 100%;
     border-collapse: collapse;
+    margin-top: 20pt;
   }
 
   .summary-table th {
     text-align: left;
-    padding: 14pt 12pt;
-    border-bottom: 2.5pt solid ${PDF_COLORS.primary};
-    font-size: 9.5pt;
+    padding: 15pt 12pt;
+    border-bottom: 3pt solid ${PDF_COLORS.primary};
+    font-size: 10pt;
     font-weight: 800;
     color: ${PDF_COLORS.primary} !important;
     text-transform: uppercase;
-    letter-spacing: 0.8pt;
+    letter-spacing: 1pt;
   }
 
   .summary-table td {
-    padding: 12pt;
+    padding: 14pt 12pt;
     border-bottom: 1pt solid ${PDF_COLORS.border};
     vertical-align: middle;
-    font-size: 10.5pt;
+    font-size: 11pt;
   }
 
   .agent-score-bar-bg {
-    width: 120pt;
+    width: 130pt;
     height: 10pt;
     background: #f1f5f9 !important;
     border-radius: 5pt;
     overflow: hidden;
     display: inline-block;
-    margin-right: 12pt;
+    margin-right: 15pt;
   }
 
   .agent-score-bar-fill {
@@ -233,107 +230,123 @@ const PDF_CSS = `
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30pt;
-    padding-bottom: 15pt;
-    border-bottom: 2pt solid ${PDF_COLORS.secondary};
+    margin-bottom: 40pt;
+    padding-bottom: 20pt;
+    border-bottom: 2.5pt solid ${PDF_COLORS.secondary};
   }
 
-  .agent-meta h2 { font-size: 24pt; font-weight: 800; color: ${PDF_COLORS.primary} !important; }
-  .agent-meta p { font-size: 11pt; color: ${PDF_COLORS.textLight} !important; margin-top: 5pt; }
+  .agent-meta h2 { font-size: 26pt; font-weight: 800; color: ${PDF_COLORS.primary} !important; }
+  .agent-meta p { font-size: 12pt; color: ${PDF_COLORS.textLight} !important; margin-top: 6pt; }
 
   .findings-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20pt;
-    margin-bottom: 25pt;
+    gap: 25pt;
+    margin-bottom: 35pt;
   }
 
   .finding-box {
-    padding: 20pt;
-    border-radius: 12pt;
+    padding: 25pt;
+    border-radius: 14pt;
+    height: 100%;
   }
 
   .finding-box h4 {
-    font-size: 10pt;
+    font-size: 11pt;
     font-weight: 800;
     text-transform: uppercase;
-    margin-bottom: 14pt;
+    margin-bottom: 15pt;
     display: flex;
     align-items: center;
-    gap: 8pt;
+    gap: 10pt;
   }
 
   .finding-list li {
-    font-size: 10.5pt;
-    margin-bottom: 10pt;
-    line-height: 1.5;
+    font-size: 11pt;
+    margin-bottom: 12pt;
+    line-height: 1.6;
+    padding-left: 15pt;
+    position: relative;
+    list-style: none;
+  }
+  .finding-list li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    font-weight: 900;
+    color: inherit;
   }
 
   /* KPI Box */
   .kpi-container {
     background: #f8fafc !important;
-    padding: 25pt;
-    border-radius: 14pt;
+    padding: 30pt;
+    border-radius: 16pt;
     border: 1pt solid ${PDF_COLORS.border};
+    margin-top: auto; /* Push to bottom of content-wrap */
   }
 
-  .kpi-title { font-size: 10pt; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5pt; margin-bottom: 20pt; color:${PDF_COLORS.primary} !important; }
-  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15pt 40pt; }
-  .kpi-item { display:flex; justify-content:space-between; align-items:center; padding: 8pt 0; border-bottom: 1pt solid ${PDF_COLORS.border}; }
+  .kpi-title { font-size: 11pt; font-weight: 800; text-transform: uppercase; letter-spacing: 2pt; margin-bottom: 25pt; color:${PDF_COLORS.primary} !important; }
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20pt 50pt; }
+  .kpi-item { display:flex; justify-content:space-between; align-items:center; padding: 10pt 0; border-bottom: 1pt solid ${PDF_COLORS.border}; }
 
-  /* Footer - FIXED TO BOTTOM */
+  /* Footer - ANCHORED */
   .page-footer {
-    position: absolute;
-    bottom: 15mm;
-    left: 20mm;
-    right: 20mm;
-    padding-top: 12pt;
-    border-top: 1pt solid ${PDF_COLORS.border};
+    width: 100%;
+    margin-top: 30pt;
+    padding-top: 15pt;
+    border-top: 1.5pt solid ${PDF_COLORS.border};
     display: flex;
     justify-content: space-between;
-    font-size: 9pt;
+    font-size: 10pt;
     color: ${PDF_COLORS.textLight} !important;
     text-transform: uppercase;
-    letter-spacing: 1.2pt;
+    letter-spacing: 1.5pt;
+    background: white !important;
   }
 
   /* Deep Dive Pretty Formatting */
   .markdown-content {
-    padding-bottom: 40pt;
+    padding: 10pt 0 50pt;
   }
-  .markdown-content h1 { font-size: 32pt; font-weight: 800; color: ${PDF_COLORS.primary} !important; margin: 0 0 25pt; line-height: 1.1; }
-  .markdown-content h2 { font-size: 20pt; font-weight: 800; color: ${PDF_COLORS.primary} !important; margin: 40pt 0 20pt; padding-top: 10pt; border-top: 1pt solid ${PDF_COLORS.border}; }
-  .markdown-content h3 { font-size: 15pt; font-weight: 700; color: ${PDF_COLORS.secondary} !important; margin: 25pt 0 12pt; text-transform: uppercase; letter-spacing: 0.5pt; }
-  .markdown-content p { font-size: 11.5pt; line-height: 1.7; margin-bottom: 18pt; color: ${PDF_COLORS.text}; text-align: justify; }
-  .markdown-content ul, .markdown-content ol { margin-bottom: 25pt; padding-left: 25pt; }
-  .markdown-content li { font-size: 11.5pt; line-height: 1.6; margin-bottom: 12pt; }
+  .markdown-content h1 { font-size: 36pt; font-weight: 800; color: ${PDF_COLORS.primary} !important; margin: 0 0 30pt; line-height: 1.1; page-break-after: avoid; }
+  .markdown-content h2 { font-size: 24pt; font-weight: 800; color: ${PDF_COLORS.primary} !important; margin: 50pt 0 25pt; padding-top: 20pt; border-top: 2pt solid ${PDF_COLORS.border}; page-break-after: avoid; }
+  .markdown-content h3 { font-size: 16pt; font-weight: 700; color: ${PDF_COLORS.secondary} !important; margin: 35pt 0 15pt; text-transform: uppercase; letter-spacing: 1pt; page-break-after: avoid; }
+  .markdown-content p { font-size: 12.5pt; line-height: 1.8; margin-bottom: 22pt; color: ${PDF_COLORS.text}; }
+  .markdown-content ul, .markdown-content ol { margin-bottom: 30pt; padding-left: 30pt; }
+  .markdown-content li { font-size: 12.5pt; line-height: 1.7; margin-bottom: 15pt; page-break-inside: avoid; }
   
   .markdown-content table { 
     width: 100%; 
     border-collapse: separate; 
     border-spacing: 0;
-    margin: 30pt 0; 
-    border: 1pt solid ${PDF_COLORS.border};
-    border-radius: 8pt;
+    margin: 40pt 0; 
+    border: 1.5pt solid ${PDF_COLORS.border};
+    border-radius: 12pt;
     overflow: hidden;
+    page-break-inside: avoid;
   }
-  .markdown-content th { background: ${PDF_COLORS.primary} !important; color: white !important; padding: 14pt; text-align: left; font-size: 10pt; font-weight: 700; text-transform: uppercase; }
-  .markdown-content td { padding: 14pt; border-bottom: 1pt solid ${PDF_COLORS.border}; font-size: 11pt; background: white !important; }
+  .markdown-content th { background: ${PDF_COLORS.primary} !important; color: white !important; padding: 18pt; text-align: left; font-size: 11pt; font-weight: 800; text-transform: uppercase; }
+  .markdown-content td { padding: 18pt; border-bottom: 1pt solid ${PDF_COLORS.border}; font-size: 12pt; background: white !important; line-height: 1.5; }
   .markdown-content tr:last-child td { border-bottom: none; }
   
   .markdown-content blockquote { 
     background: #f1f5f9 !important; 
-    border-left: 6pt solid ${PDF_COLORS.secondary}; 
-    padding: 20pt 25pt; 
-    margin: 25pt 0; 
-    border-radius: 0 10pt 10pt 0;
+    border-left: 8pt solid ${PDF_COLORS.secondary}; 
+    padding: 30pt 40pt; 
+    margin: 40pt 0; 
+    border-radius: 0 16pt 16pt 0;
+    page-break-inside: avoid;
   }
-  .markdown-content blockquote p { margin-bottom: 0; font-style: italic; font-weight: 500; color: ${PDF_COLORS.primary}; }
+  .markdown-content blockquote p { margin-bottom: 0; font-style: italic; font-weight: 600; color: ${PDF_COLORS.primary}; font-size: 14pt; }
 
-  .markdown-content hr { border: none; border-top: 2pt solid ${PDF_COLORS.border}; margin: 40pt 0; }
+  .markdown-content hr { border: none; border-top: 3pt solid ${PDF_COLORS.border}; margin: 50pt 0; }
 
   /* Page Break Prevention */
-  .keep-together { page-break-inside: avoid !important; break-inside: avoid !important; }
+  .section, .finding-box, .score-grid, .summary-table, .agent-header, .kpi-container, .markdown-content table, .markdown-content blockquote, .markdown-content pre {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
 `;
 
 export function buildExecutivePdfHtml(results, agentsConfig) {
@@ -423,7 +436,7 @@ export function buildExecutivePdfHtml(results, agentsConfig) {
 
         <div class="page-footer">
           <span>OMNIAUDIT EXECUTIVE REPORT | ${domain}</span>
-          <span>Page ${index + 3} of ${agentsConfig.length + 2}</span>
+          <span style="font-weight:800;">Page ${index + 3} of ${agentsConfig.length + 2}</span>
         </div>
       </div>
     `;
@@ -444,9 +457,12 @@ export function buildExecutivePdfHtml(results, agentsConfig) {
             <h1 class="cover-title">Marketing Intelligence<br>Executive Audit</h1>
             <p class="cover-subtitle">A professional 14-dimensional audit of digital performance, strategic alignment, and growth opportunities.</p>
             
-            <div class="cover-footer">
-              <div class="cover-domain">${domain}</div>
-              <div class="cover-date">${today} | Composite Score: ${results.composite}/100</div>
+            <div style="margin-top: auto; border-top: 1pt solid rgba(255,255,255,0.2); padding-top: 25pt; display:flex; justify-content:space-between; align-items:flex-end;">
+              <div>
+                <div class="cover-domain">${domain}</div>
+                <div class="cover-date">${today}</div>
+              </div>
+              <div style="font-size: 14pt; font-weight: 700; color: white !important;">COMPOSITE SCORE: ${results.composite}/100</div>
             </div>
           </div>
 
@@ -464,8 +480,8 @@ export function buildExecutivePdfHtml(results, agentsConfig) {
                   <div class="grade-badge" style="background:${gradeColor}20; color:${gradeColor}">GRADE: ${results.grade}</div>
                 </div>
                 <div style="display: flex; flex-direction: column; justify-content: center; padding-left: 10pt;">
-                  <h3 style="font-size:15pt; font-weight:800; margin-bottom:12pt; color:${PDF_COLORS.primary}">Strategic Outlook</h3>
-                  <p style="font-size: 12pt; color: ${PDF_COLORS.text}; line-height: 1.7;">
+                  <h3 style="font-size:16pt; font-weight:800; margin-bottom:15pt; color:${PDF_COLORS.primary}">Strategic Outlook</h3>
+                  <p style="font-size: 13pt; color: ${PDF_COLORS.text}; line-height: 1.8;">
                     ${results.composite >= 85 ? 
                       'The digital infrastructure is exceptionally mature. Strategic focus should remain on high-level competitive moats and incremental performance gains.' : 
                       results.composite >= 70 ? 
@@ -477,19 +493,21 @@ export function buildExecutivePdfHtml(results, agentsConfig) {
                 </div>
               </div>
 
-              <h3 style="font-size: 11pt; font-weight: 800; text-transform: uppercase; letter-spacing: 2pt; color:${PDF_COLORS.textLight}; margin-bottom: 20pt;">Performance Matrix</h3>
-              <table class="summary-table">
-                <thead>
-                  <tr>
-                    <th>Marketing Dimension</th>
-                    <th>Performance Index</th>
-                    <th style="text-align:center">Impact Weight</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${tableRows}
-                </tbody>
-              </table>
+              <div class="section" style="margin-top:auto;">
+                <h3 style="font-size: 11pt; font-weight: 800; text-transform: uppercase; letter-spacing: 2pt; color:${PDF_COLORS.textLight}; margin-bottom: 20pt;">Performance Matrix</h3>
+                <table class="summary-table">
+                  <thead>
+                    <tr>
+                      <th>Marketing Dimension</th>
+                      <th>Performance Index</th>
+                      <th style="text-align:center">Impact Weight</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${tableRows}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <div class="page-footer">
@@ -519,7 +537,7 @@ export function buildDeepDivePdfHtml(results, agent, content) {
       const bdy = rows.slice(1).map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
       return `<table><thead><tr>${hdr}</tr></thead><tbody>${bdy}</tbody></table>`;
     })
-    .replace(/```[\w]*\n([\s\S]+?)```/g, '<pre style="background:#1e293b; color:#f8fafc; padding:20pt; border-radius:12pt; font-size:10pt; margin:25pt 0; overflow:hidden;"><code>$1</code></pre>')
+    .replace(/```[\w]*\n([\s\S]+?)```/g, '<pre style="background:#1e293b; color:#f8fafc; padding:25pt; border-radius:14pt; font-size:11pt; margin:30pt 0; line-height:1.6;"><code>$1</code></pre>')
     .replace(/^#{1}\s+(.+)$/gm, '<h1>$1</h1>')
     .replace(/^#{2}\s+(.+)$/gm, '<h2>$1</h2>')
     .replace(/^#{3}\s+(.+)$/gm, '<h3>$1</h3>')
@@ -528,7 +546,7 @@ export function buildDeepDivePdfHtml(results, agent, content) {
     .replace(/^---+$/gm, '<hr>')
     .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#0f172a; font-weight:800;">$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code style="background:#f1f5f9; padding:3pt 6pt; border-radius:4pt; font-size:10pt; font-weight:600;">$1</code>')
+    .replace(/`(.+?)`/g, '<code style="background:#f1f5f9; padding:4pt 8pt; border-radius:6pt; font-size:11pt; font-weight:600; color:#2563eb;">$1</code>')
     .replace(/^[-*]\s+(.+)$/gm, '<li>$1</li>')
     .replace(/^(\d+)\.\s+(.+)$/gm, '<li>$2</li>')
     .replace(/\n\n(?=[^<])/g, '</p><p>')
@@ -546,22 +564,24 @@ export function buildDeepDivePdfHtml(results, agent, content) {
           <div class="page cover-page">
             <div class="logo-text">OMNIAUDIT&reg;</div>
             <div class="cover-accent" style="background:${PDF_COLORS.accent} !important;"></div>
-            <div style="font-size:11pt; font-weight:800; text-transform:uppercase; letter-spacing:2.5pt; margin-bottom:18pt; color:${PDF_COLORS.accent} !important;">Deep Strategy Deliverable</div>
+            <div style="font-size:12pt; font-weight:800; text-transform:uppercase; letter-spacing:3pt; margin-bottom:20pt; color:${PDF_COLORS.accent} !important;">Deep Strategy Deliverable</div>
             <h1 class="cover-title">${agent.title}</h1>
             <p class="cover-subtitle">Detailed implementation framework and tactical roadmap for optimized ${agent.title.toLowerCase()} performance.</p>
             
-            <div class="cover-footer">
-              <div class="cover-domain">${domain}</div>
-              <div class="cover-date">Generated: ${today}</div>
+            <div style="margin-top: auto; border-top: 1pt solid rgba(255,255,255,0.2); padding-top: 25pt; display:flex; justify-content:space-between; align-items:flex-end;">
+              <div>
+                <div class="cover-domain">${domain}</div>
+                <div class="cover-date">Generated: ${today}</div>
+              </div>
             </div>
           </div>
 
           <div class="page deep-dive-page">
-            <div class="content-wrap markdown-content">
+            <div class="markdown-content">
               ${htmlBody}
             </div>
             
-            <div class="page-footer">
+            <div class="page-footer" style="position:relative; bottom:0; left:0; right:0; margin-top:50pt;">
               <span>${agent.title.toUpperCase()} STRATEGY | ${domain}</span>
               <span style="font-weight:800;">Proprietary Deliverable</span>
             </div>

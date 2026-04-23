@@ -217,8 +217,8 @@ function App() {
       iDoc.body.style.color = '#1e293b';
     }
 
-    // Give the browser more time to render premium fonts and complex layouts
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Increase wait time for settled flexbox layout
+    await new Promise(resolve => setTimeout(resolve, 2500));
 
     const opt = {
       margin: 0,
@@ -229,7 +229,7 @@ function App() {
         useCORS: true, 
         logging: false, 
         backgroundColor: '#ffffff',
-        windowWidth: 800,
+        windowWidth: 794,
         scrollY: 0
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
