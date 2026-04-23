@@ -198,8 +198,8 @@ function App() {
     iframe.style.position = 'fixed';
     iframe.style.left = '0';
     iframe.style.top = '0';
-    iframe.style.width = '800px'; // Fixed width for consistent capture
-    iframe.style.height = '100vh';
+    iframe.style.width = '800px'; 
+    iframe.style.height = 'auto'; // Let it grow to full content height
     iframe.style.visibility = 'hidden';
     iframe.style.zIndex = '-9999';
     // Explicitly set light scheme
