@@ -193,30 +193,50 @@ function App() {
   };
 
   const renderPdf = async (html, filename) => {
-    const element = document.createElement('div');
-    element.style.position = 'absolute';
-    element.style.left = '-9999px';
-    element.style.top = '0';
-    element.style.width = '794px'; // A4 width at 96dpi
-    element.innerHTML = html;
-    document.body.appendChild(element);
+    // Create an iframe to render the HTML correctly with its own document context
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.left = '0';
+    iframe.style.top = '0';
+    iframe.style.width = '794px'; // A4 width
+    iframe.style.height = '1123px'; // A4 height approx
+    iframe.style.visibility = 'hidden';
+    iframe.style.zIndex = '-9999';
+    document.body.appendChild(iframe);
+
+    const iDoc = iframe.contentDocument || iframe.contentWindow.document;
+    iDoc.open();
+    iDoc.write(html);
+    iDoc.close();
+
+    // Give the browser time to render the content and load fonts
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
     const opt = {
-      margin: [0, 0, 0, 0],
+      margin: 0,
       filename: filename,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', windowWidth: 794 },
+      image: { type: 'jpeg', quality: 1.0 },
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        logging: false, 
+        backgroundColor: '#ffffff',
+        windowWidth: 794
+      },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['css', 'legacy'] }
     };
 
     try {
-      await html2pdf().set(opt).from(element).save();
+      // Use the iframe's body as the source
+      await html2pdf().set(opt).from(iDoc.body).save();
     } catch (err) {
       console.error('PDF Rendering Error:', err);
       throw err;
     } finally {
-      document.body.removeChild(element);
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
     }
   };
 
