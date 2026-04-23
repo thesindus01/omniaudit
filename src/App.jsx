@@ -293,15 +293,35 @@ function App() {
           pagebreak:   { mode: ['css', 'legacy'] }
         };
 
-        // Pass the HTML string directly — html2pdf renders it in its own iframe
-        // so it doesn't need to be in the visible viewport
-        html2pdf().set(opt).from(pdfHtml, 'string').save().then(() => {
-          setIsGeneratingPdf(false);
-          setPdfReady(true);
-        }).catch(err => {
-          console.error('PDF error:', err);
-          setIsGeneratingPdf(false);
-        });
+        // Render in an isolated iframe so the app's dark-theme CSS
+        // cannot bleed in and make text invisible (white-on-white).
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:-9999;opacity:0;border:none;pointer-events:none;';
+        document.body.appendChild(iframe);
+
+        const iDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iDoc.open();
+        iDoc.write(pdfHtml);
+        iDoc.close();
+
+        // Give iframe time to fully render before capturing
+        setTimeout(() => {
+          html2pdf()
+            .set(opt)
+            .from(iDoc.body)
+            .save()
+            .then(() => {
+              document.body.removeChild(iframe);
+              setIsGeneratingPdf(false);
+              setPdfReady(true);
+            })
+            .catch(err => {
+              console.error('PDF error:', err);
+              if (document.body.contains(iframe)) document.body.removeChild(iframe);
+              setIsGeneratingPdf(false);
+            });
+        }, 800);
+
       } catch (error) {
         console.error('PDF Gen Error:', error);
         setIsGeneratingPdf(false);
