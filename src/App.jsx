@@ -198,10 +198,12 @@ function App() {
     iframe.style.position = 'fixed';
     iframe.style.left = '0';
     iframe.style.top = '0';
-    iframe.style.width = '794px'; // A4 width
-    iframe.style.height = '1123px'; // A4 height approx
+    iframe.style.width = '800px'; // Fixed width for consistent capture
+    iframe.style.height = '100vh';
     iframe.style.visibility = 'hidden';
     iframe.style.zIndex = '-9999';
+    // Explicitly set light scheme
+    iframe.style.colorScheme = 'light';
     document.body.appendChild(iframe);
 
     const iDoc = iframe.contentDocument || iframe.contentWindow.document;
@@ -209,8 +211,14 @@ function App() {
     iDoc.write(html);
     iDoc.close();
 
-    // Give the browser time to render the content and load fonts
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Force white background on the iframe body immediately
+    if (iDoc.body) {
+      iDoc.body.style.backgroundColor = '#ffffff';
+      iDoc.body.style.color = '#1e293b';
+    }
+
+    // Give the browser more time to render premium fonts and complex layouts
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     const opt = {
       margin: 0,
@@ -221,7 +229,8 @@ function App() {
         useCORS: true, 
         logging: false, 
         backgroundColor: '#ffffff',
-        windowWidth: 794
+        windowWidth: 800,
+        scrollY: 0
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['css', 'legacy'] }

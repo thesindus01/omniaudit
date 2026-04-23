@@ -1,6 +1,4 @@
 
-import html2pdf from 'html2pdf.js';
-
 /**
  * OMNIAUDIT PREMIUM PDF TEMPLATE ENGINE
  * High-fidelity, executive-grade document generation.
@@ -10,262 +8,325 @@ const PDF_COLORS = {
   primary: '#0f172a',    // Deep Navy
   secondary: '#2563eb',  // Royal Blue
   accent: '#3b82f6',     // Bright Blue
-  success: '#10b981',    // Emerald
-  warning: '#f59e0b',    // Amber
-  danger: '#ef4444',     // Rose
+  success: '#059669',    // Emerald 600
+  warning: '#d97706',    // Amber 600
+  danger: '#dc2626',     // Rose 600
   text: '#1e293b',       // Slate 800
-  textLight: '#64748b',  // Slate 500
-  bg: '#ffffff',         // Pure White
-  cardBg: '#f8fafc'      // Slate 50
+  textLight: '#475569',  // Slate 600
+  border: '#e2e8f0',     // Slate 200
+  bg: '#ffffff'          // Pure White
 };
 
 const PDF_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-  * { box-sizing: border-box; -webkit-print-color-adjust: exact; }
-  
-  body {
-    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
-    color: ${PDF_COLORS.text};
-    background: ${PDF_COLORS.bg};
-    line-height: 1.6;
+  /* Global Reset & Force White Background */
+  * { 
+    box-sizing: border-box; 
+    -webkit-print-color-adjust: exact !important; 
+    color-adjust: exact !important;
     margin: 0;
     padding: 0;
-    font-size: 10pt;
+  }
+  
+  html, body {
+    background: ${PDF_COLORS.bg} !important;
+    color: ${PDF_COLORS.text} !important;
+    font-family: 'Inter', -apple-system, sans-serif;
+    width: 210mm; /* A4 Width */
+    margin: 0;
+    padding: 0;
+  }
+
+  .pdf-container {
+    background: white !important;
+    color: ${PDF_COLORS.text} !important;
   }
 
   .page {
-    padding: 40pt 50pt;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 25mm 20mm;
     position: relative;
     page-break-after: always;
-    min-height: 100vh;
-  }
-
-  /* Cover Page */
-  .cover-page {
-    background: linear-gradient(135deg, ${PDF_COLORS.primary} 0%, #1e3a8a 100%);
-    color: #ffffff;
+    background: white !important;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Cover Page Design */
+  .cover-page {
+    background: ${PDF_COLORS.primary} !important;
+    color: white !important;
     justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 0;
+    align-items: flex-start;
+    padding: 40mm 20mm;
   }
 
-  .cover-content {
-    max-width: 80%;
+  .cover-accent {
+    width: 60mm;
+    height: 4pt;
+    background: ${PDF_COLORS.secondary};
+    margin-bottom: 20pt;
   }
 
-  .logo-placeholder {
+  .logo-text {
     font-size: 24pt;
     font-weight: 800;
-    letter-spacing: -1px;
-    margin-bottom: 40pt;
-    opacity: 0.9;
+    letter-spacing: -0.02em;
+    margin-bottom: 60pt;
+    opacity: 0.95;
+    color: white !important;
   }
 
   .cover-title {
-    font-size: 36pt;
+    font-size: 42pt;
     font-weight: 800;
     line-height: 1.1;
-    margin-bottom: 15pt;
+    margin-bottom: 20pt;
+    color: white !important;
   }
 
   .cover-subtitle {
-    font-size: 16pt;
-    font-weight: 400;
-    color: rgba(255,255,255,0.7);
-    margin-bottom: 50pt;
+    font-size: 18pt;
+    font-weight: 300;
+    color: rgba(255,255,255,0.7) !important;
+    margin-bottom: 80pt;
+    max-width: 80%;
+  }
+
+  .cover-footer {
+    margin-top: auto;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-top: 1pt solid rgba(255,255,255,0.2);
+    padding-top: 20pt;
   }
 
   .cover-domain {
     font-size: 14pt;
     font-weight: 600;
-    background: rgba(255,255,255,0.1);
-    padding: 10pt 20pt;
-    border-radius: 50pt;
-    display: inline-block;
-    margin-bottom: 20pt;
+    color: white !important;
   }
 
-  .cover-meta {
+  .cover-date {
     font-size: 10pt;
-    color: rgba(255,255,255,0.5);
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 2pt;
+    color: rgba(255,255,255,0.5) !important;
   }
 
-  /* Typography */
-  h1, h2, h3, h4 { margin: 0; padding: 0; color: ${PDF_COLORS.primary}; }
-  
+  /* Section Headers */
+  .section-header {
+    margin-bottom: 30pt;
+    border-bottom: 2pt solid ${PDF_COLORS.border};
+    padding-bottom: 10pt;
+  }
+
   .section-title {
+    font-size: 24pt;
+    font-weight: 800;
+    color: ${PDF_COLORS.primary} !important;
+    margin-bottom: 5pt;
+  }
+
+  .section-tagline {
+    font-size: 11pt;
+    color: ${PDF_COLORS.textLight} !important;
+  }
+
+  /* Executive Score Grid */
+  .score-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 30pt;
+    margin-bottom: 40pt;
+  }
+
+  .score-card {
+    background: #f8fafc !important;
+    padding: 30pt;
+    border-radius: 12pt;
+    border: 1pt solid ${PDF_COLORS.border};
+    text-align: center;
+  }
+
+  .score-label {
+    font-size: 9pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5pt;
+    color: ${PDF_COLORS.textLight} !important;
+    margin-bottom: 10pt;
+  }
+
+  .score-value {
+    font-size: 72pt;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 10pt;
+  }
+
+  .grade-badge {
+    display: inline-block;
+    padding: 6pt 16pt;
+    border-radius: 50pt;
+    font-weight: 700;
+    font-size: 14pt;
+  }
+
+  /* Summary Table */
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20pt;
+  }
+
+  .summary-table th {
+    text-align: left;
+    padding: 12pt;
+    border-bottom: 2pt solid ${PDF_COLORS.primary};
+    font-size: 10pt;
+    font-weight: 700;
+    color: ${PDF_COLORS.primary} !important;
+    text-transform: uppercase;
+  }
+
+  .summary-table td {
+    padding: 14pt 12pt;
+    border-bottom: 1pt solid ${PDF_COLORS.border};
+    vertical-align: middle;
+  }
+
+  .agent-score-bar-bg {
+    width: 100pt;
+    height: 8pt;
+    background: #f1f5f9 !important;
+    border-radius: 4pt;
+    overflow: hidden;
+    display: inline-block;
+    margin-right: 10pt;
+  }
+
+  .agent-score-bar-fill {
+    height: 100%;
+    border-radius: 4pt;
+  }
+
+  /* Agent Detail Page */
+  .agent-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30pt;
+    padding-bottom: 15pt;
+    border-bottom: 2pt solid ${PDF_COLORS.secondary};
+  }
+
+  .agent-meta h2 {
     font-size: 22pt;
     font-weight: 800;
-    margin-bottom: 8pt;
-    border-bottom: 3pt solid ${PDF_COLORS.secondary};
-    display: inline-block;
-    padding-bottom: 4pt;
+    color: ${PDF_COLORS.primary} !important;
   }
 
-  .section-subtitle {
-    font-size: 11pt;
-    color: ${PDF_COLORS.textLight};
-    margin-bottom: 30pt;
+  .agent-meta p {
+    font-size: 10pt;
+    color: ${PDF_COLORS.textLight} !important;
   }
 
-  /* Score Dashboard */
-  .dashboard-grid {
+  .agent-score-pill {
+    text-align: right;
+  }
+
+  .pill-value {
+    font-size: 28pt;
+    font-weight: 800;
+    color: ${PDF_COLORS.primary} !important;
+  }
+
+  /* Findings Layout */
+  .findings-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20pt;
     margin-bottom: 30pt;
   }
 
-  .main-score-card {
-    background: ${PDF_COLORS.cardBg};
-    padding: 25pt;
-    border-radius: 12pt;
-    text-align: center;
-    border: 1pt solid #e2e8f0;
-  }
-
-  .score-big {
-    font-size: 64pt;
-    font-weight: 800;
-    line-height: 1;
-    margin: 10pt 0;
-  }
-
-  .grade-badge {
-    display: inline-block;
-    padding: 4pt 12pt;
-    border-radius: 6pt;
-    font-weight: 700;
-    font-size: 12pt;
-    margin-bottom: 10pt;
-    text-transform: uppercase;
-  }
-
-  /* Summary Table */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20pt;
-  }
-
-  th {
-    text-align: left;
-    padding: 10pt 12pt;
-    background: ${PDF_COLORS.primary};
-    color: #ffffff;
-    font-size: 8pt;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-
-  td {
-    padding: 8pt 12pt;
-    border-bottom: 1pt solid #e2e8f0;
-    font-size: 10pt;
-  }
-
-  tr:nth-child(even) td { background: #fcfcfc; }
-
-  .pill {
-    padding: 2pt 8pt;
-    border-radius: 4pt;
-    font-size: 8pt;
-    font-weight: 600;
-    display: inline-block;
-  }
-
-  /* Agent Section */
-  .agent-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20pt;
-    padding-bottom: 10pt;
-    border-bottom: 1pt solid #e2e8f0;
-  }
-
-  .agent-info { display: flex; align-items: center; gap: 10pt; }
-  
-  .agent-icon {
-    width: 32pt;
-    height: 32pt;
-    background: ${PDF_COLORS.primary};
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8pt;
-    font-size: 16pt;
-  }
-
   .finding-box {
-    padding: 15pt;
-    border-radius: 8pt;
-    margin-bottom: 15pt;
+    padding: 20pt;
+    border-radius: 10pt;
+    border: 1pt solid transparent;
   }
 
-  .finding-box.danger { background: #fef2f2; border: 1pt solid #fecaca; }
-  .finding-box.warning { background: #fffbeb; border: 1pt solid #fef3c7; }
-  .finding-box.success { background: #f0fdf4; border: 1pt solid #bbf7d0; }
+  .finding-box.critical {
+    background: #fff1f2 !important;
+    border-color: #fecaca !important;
+  }
 
-  .finding-title {
-    font-size: 9pt;
-    font-weight: 700;
+  .finding-box.success {
+    background: #f0fdf4 !important;
+    border-color: #bbf7d0 !important;
+  }
+
+  .finding-box h4 {
+    font-size: 10pt;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 8pt;
+    margin-bottom: 12pt;
     display: flex;
     align-items: center;
-    gap: 5pt;
+    gap: 6pt;
   }
 
   .finding-list {
-    margin: 0;
-    padding-left: 15pt;
-    list-style-type: square;
+    list-style: none;
   }
 
-  .finding-list li { margin-bottom: 5pt; font-size: 9.5pt; }
+  .finding-list li {
+    font-size: 10.5pt;
+    margin-bottom: 8pt;
+    padding-left: 14pt;
+    position: relative;
+    line-height: 1.4;
+  }
+
+  .finding-list li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    font-weight: 800;
+  }
 
   /* Footer */
-  .footer {
-    position: absolute;
-    bottom: 20pt;
-    left: 50pt;
-    right: 50pt;
-    font-size: 8pt;
-    color: ${PDF_COLORS.textLight};
+  .page-footer {
+    margin-top: auto;
+    padding-top: 15pt;
+    border-top: 1pt solid ${PDF_COLORS.border};
     display: flex;
     justify-content: space-between;
-    border-top: 1pt solid #e2e8f0;
-    padding-top: 10pt;
+    font-size: 8pt;
+    color: ${PDF_COLORS.textLight} !important;
+    text-transform: uppercase;
+    letter-spacing: 1pt;
   }
 
-  /* Deep Dive Styles */
-  .markdown-content h1 { font-size: 20pt; margin: 20pt 0 10pt; color: ${PDF_COLORS.primary}; }
-  .markdown-content h2 { font-size: 16pt; margin: 18pt 0 8pt; color: ${PDF_COLORS.primary}; border-bottom: 1pt solid #e2e8f0; padding-bottom: 4pt; }
-  .markdown-content h3 { font-size: 13pt; margin: 15pt 0 6pt; color: ${PDF_COLORS.secondary}; }
-  .markdown-content p { margin-bottom: 10pt; }
-  .markdown-content ul, .markdown-content ol { margin-bottom: 15pt; padding-left: 20pt; }
-  .markdown-content li { margin-bottom: 5pt; }
-  .markdown-content blockquote {
-    border-left: 4pt solid ${PDF_COLORS.accent};
-    background: ${PDF_COLORS.cardBg};
-    padding: 10pt 15pt;
-    margin: 15pt 0;
-    font-style: italic;
-  }
-  .markdown-content table { margin: 20pt 0; }
-  .markdown-content code { background: #f1f5f9; padding: 2pt 4pt; border-radius: 3pt; font-family: monospace; font-size: 9pt; }
-  .markdown-content pre { background: #1e293b; color: #f8fafc; padding: 15pt; border-radius: 8pt; overflow: hidden; margin: 15pt 0; }
+  /* Deep Dive Markdown Styling */
+  .markdown-content h1 { font-size: 28pt; font-weight: 800; margin-bottom: 20pt; border-bottom: 3pt solid ${PDF_COLORS.secondary}; padding-bottom: 10pt; }
+  .markdown-content h2 { font-size: 18pt; font-weight: 700; margin: 30pt 0 15pt; color: ${PDF_COLORS.primary} !important; border-left: 4pt solid ${PDF_COLORS.secondary}; padding-left: 15pt; }
+  .markdown-content h3 { font-size: 14pt; font-weight: 700; margin: 20pt 0 10pt; color: ${PDF_COLORS.secondary} !important; }
+  .markdown-content p { margin-bottom: 12pt; font-size: 11pt; line-height: 1.6; }
+  .markdown-content ul, .markdown-content ol { margin-bottom: 20pt; padding-left: 20pt; }
+  .markdown-content li { margin-bottom: 8pt; font-size: 11pt; }
+  .markdown-content table { width: 100%; border-collapse: collapse; margin: 25pt 0; }
+  .markdown-content th { background: ${PDF_COLORS.primary} !important; color: white !important; padding: 10pt; text-align: left; font-size: 9pt; }
+  .markdown-content td { padding: 10pt; border-bottom: 1pt solid ${PDF_COLORS.border}; font-size: 10pt; }
+  .markdown-content blockquote { background: #f8fafc !important; border-left: 5pt solid ${PDF_COLORS.accent}; padding: 15pt 20pt; margin: 20pt 0; font-style: italic; }
 
-  .page-break { page-break-before: always; }
+  /* Page Breaks */
+  .keep-together { page-break-inside: avoid; }
 `;
 
 export function buildExecutivePdfHtml(results, agentsConfig) {
@@ -278,25 +339,25 @@ export function buildExecutivePdfHtml(results, agentsConfig) {
                      results.composite >= 70 ? PDF_COLORS.secondary :
                      results.composite >= 55 ? PDF_COLORS.warning : PDF_COLORS.danger;
 
-  // 1. Summary Table Rows
+  // 1. Summary Matrix Rows
   const tableRows = agentsConfig.map(agent => {
     const d = results.stats?.[agent.key];
-    const score = d?.score ?? 'N/A';
+    const score = (d && typeof d.score === 'number') ? d.score : 0;
     const color = score >= 70 ? PDF_COLORS.success : 
                   score >= 50 ? PDF_COLORS.warning : PDF_COLORS.danger;
     
     return `
       <tr>
-        <td style="font-weight: 600;">${agent.title}</td>
+        <td style="font-weight: 700; color:${PDF_COLORS.primary}">${agent.title}</td>
         <td>
-          <div style="display:flex; align-items:center; gap:8pt;">
-            <div style="width:60pt; height:6pt; background:#e2e8f0; border-radius:3pt; overflow:hidden;">
-              <div style="width:${typeof score === 'number' ? score : 0}%; height:100%; background:${color};"></div>
+          <div style="display:flex; align-items:center;">
+            <div class="agent-score-bar-bg">
+              <div class="agent-score-bar-fill" style="width:${score}%; background:${color} !important;"></div>
             </div>
-            <span style="font-weight:700; color:${color}">${score}${typeof score === 'number' ? '/100' : ''}</span>
+            <span style="font-weight:800; color:${color}">${score}<span style="font-size:8pt; opacity:0.6;">/100</span></span>
           </div>
         </td>
-        <td style="text-align:center; color:${PDF_COLORS.textLight}">${agent.weight}</td>
+        <td style="text-align:center; color:${PDF_COLORS.textLight}; font-weight:600;">${agent.weight}</td>
       </tr>
     `;
   }).join('');
@@ -306,7 +367,9 @@ export function buildExecutivePdfHtml(results, agentsConfig) {
     const d = results.stats?.[agent.key];
     if (!d) return '';
 
-    const scoreColor = (d.score && typeof d.score === 'number') ? (d.score >= 70 ? PDF_COLORS.success : d.score >= 50 ? PDF_COLORS.warning : PDF_COLORS.danger) : PDF_COLORS.textLight;
+    const scoreColor = (d.score && typeof d.score === 'number') ? 
+                       (d.score >= 70 ? PDF_COLORS.success : d.score >= 50 ? PDF_COLORS.warning : PDF_COLORS.danger) : 
+                       PDF_COLORS.textLight;
 
     const issues = (d.identifiedIssues || []).map(i => `<li>${i}</li>`).join('');
     const solutions = (d.proposedSolutions || []).map(s => `<li>${s}</li>`).join('');
@@ -314,55 +377,46 @@ export function buildExecutivePdfHtml(results, agentsConfig) {
     return `
       <div class="page">
         <div class="agent-header">
-          <div class="agent-info">
-            <div class="agent-icon">${agent.title.charAt(0)}</div>
-            <div>
-              <h2 style="font-size: 18pt;">${agent.title}</h2>
-              <p style="font-size: 9pt; color:${PDF_COLORS.textLight}">${agent.desc}</p>
-            </div>
+          <div class="agent-meta">
+            <h2>${agent.title}</h2>
+            <p>${agent.desc}</p>
           </div>
-          <div style="text-align: right">
-            <div style="font-size: 24pt; font-weight: 800; color:${scoreColor}">${d.score || 0}<span style="font-size: 12pt; opacity: 0.5;">/100</span></div>
-            <div class="pill" style="background:${scoreColor}20; color:${scoreColor}">
-              ${d.score >= 70 ? 'Optimal' : d.score >= 50 ? 'Needs Work' : 'Critical'}
-            </div>
+          <div class="agent-score-pill">
+            <div class="pill-value" style="color:${scoreColor} !important;">${d.score || 0}<span style="font-size:12pt; opacity:0.5;">/100</span></div>
+            <div style="font-size:9pt; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:${scoreColor}">${d.score >= 70 ? 'Optimal' : d.score >= 50 ? 'Needs Work' : 'Critical'}</div>
           </div>
         </div>
 
-        <div class="dashboard-grid">
-          <div class="finding-box danger">
-            <div class="finding-title" style="color:${PDF_COLORS.danger}">
-              <span>⚠️</span> Identified Issues
-            </div>
+        <div class="findings-container">
+          <div class="finding-box critical">
+            <h4 style="color:${PDF_COLORS.danger}"><span style="font-size:14pt;">⚠️</span> Identified Challenges</h4>
             <ul class="finding-list">
-              ${issues || '<li>No critical issues identified.</li>'}
+              ${issues || '<li>No critical challenges identified.</li>'}
             </ul>
           </div>
           <div class="finding-box success">
-            <div class="finding-title" style="color:${PDF_COLORS.success}">
-              <span>✅</span> Strategic Solutions
-            </div>
+            <h4 style="color:${PDF_COLORS.success}"><span style="font-size:14pt;">✅</span> Strategic Remedies</h4>
             <ul class="finding-list">
-              ${solutions || '<li>Maintain current performance levels.</li>'}
+              ${solutions || '<li>Maintain current operational standards.</li>'}
             </ul>
           </div>
         </div>
 
-        <div style="background:${PDF_COLORS.cardBg}; padding: 20pt; border-radius: 12pt; border: 1pt solid #e2e8f0;">
-          <h4 style="font-size: 9pt; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10pt;">KPI Dimensions</h4>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10pt;">
+        <div style="background:#f8fafc !important; padding: 25pt; border-radius: 12pt; border: 1pt solid ${PDF_COLORS.border};">
+          <h4 style="font-size: 10pt; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15pt; color:${PDF_COLORS.primary}">KPI Dimension Analysis</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20pt;">
             ${(d.dimensions || []).map(dim => `
-              <div style="display:flex; justify-content:space-between; align-items:center; padding: 6pt 0; border-bottom: 1pt solid #e2e8f0;">
-                <span style="font-size: 9pt;">${dim.name}</span>
-                <span style="font-weight: 700; color:${dim.status === 'good' ? PDF_COLORS.success : dim.status === 'warning' ? PDF_COLORS.warning : PDF_COLORS.danger}">${dim.score}</span>
+              <div style="display:flex; justify-content:space-between; align-items:center; padding: 8pt 0; border-bottom: 1pt solid ${PDF_COLORS.border};">
+                <span style="font-size: 10pt; font-weight:500;">${dim.name}</span>
+                <span style="font-weight: 800; color:${dim.status === 'good' ? PDF_COLORS.success : dim.status === 'warning' ? PDF_COLORS.warning : PDF_COLORS.danger}">${dim.score}</span>
               </div>
             `).join('')}
           </div>
         </div>
 
-        <div class="footer">
+        <div class="page-footer">
           <span>OMNIAUDIT EXECUTIVE REPORT | ${domain}</span>
-          <span>PROPRIETARY & CONFIDENTIAL</span>
+          <span style="font-weight:800;">Proprietary & Confidential</span>
         </div>
       </div>
     `;
@@ -376,65 +430,70 @@ export function buildExecutivePdfHtml(results, agentsConfig) {
         <style>${PDF_CSS}</style>
       </head>
       <body>
-        <!-- Page 1: Cover -->
-        <div class="page cover-page">
-          <div class="cover-content">
-            <div class="logo-placeholder">OMNIAUDIT&reg;</div>
-            <h1 class="cover-title">Marketing Intelligence Executive Audit</h1>
-            <p class="cover-subtitle">A Comprehensive 14-Dimensional Performance Analysis</p>
-            <div class="cover-domain">${domain}</div>
-            <div class="cover-meta">${today} | COMPOSITE SCORE: ${results.composite}/100</div>
-          </div>
-        </div>
-
-        <!-- Page 2: Executive Summary -->
-        <div class="page">
-          <h1 class="section-title">Executive Summary</h1>
-          <p class="section-subtitle">A high-level overview of the digital marketing performance across all analyzed modules.</p>
-          
-          <div class="dashboard-grid">
-            <div class="main-score-card">
-              <div class="grade-badge" style="background:${gradeColor}20; color:${gradeColor}">Grade: ${results.grade}</div>
-              <div class="score-big" style="color:${gradeColor}">${results.composite}</div>
-              <div style="font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color:${PDF_COLORS.textLight}">Composite Score</div>
-            </div>
-            <div style="display: flex; flex-direction: column; justify-content: center;">
-              <h3 style="margin-bottom: 10pt;">Strategic Outlook</h3>
-              <p style="font-size: 11pt; color: ${PDF_COLORS.text};">
-                ${results.composite >= 85 ? 
-                  'The digital presence is exceptionally strong. Focus should be on incremental optimizations and maintaining competitive moats.' : 
-                  results.composite >= 70 ? 
-                  'Solid performance with clear growth opportunities. Addressing the identified gaps could yield significant ROI improvement.' : 
-                  results.composite >= 55 ? 
-                  'Average performance with significant systemic issues. A strategic shift in several key marketing dimensions is recommended.' : 
-                  'Critical failure points detected across multiple marketing channels. Urgent strategic intervention is required to prevent further loss of market share.'}
-              </p>
+        <div class="pdf-container">
+          <!-- Cover Page -->
+          <div class="page cover-page">
+            <div class="logo-text">OMNIAUDIT&reg;</div>
+            <div class="cover-accent"></div>
+            <h1 class="cover-title">Marketing Intelligence<br>Executive Audit</h1>
+            <p class="cover-subtitle">A professional 14-dimensional audit of digital performance, strategic alignment, and growth opportunities.</p>
+            
+            <div class="cover-footer">
+              <div class="cover-domain">${domain}</div>
+              <div class="cover-date">${today} | Composite Score: ${results.composite}/100</div>
             </div>
           </div>
 
-          <h3 style="margin-bottom: 15pt; text-transform: uppercase; letter-spacing: 1px; font-size: 10pt; color:${PDF_COLORS.textLight}">Agent Performance Matrix</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Marketing Dimension</th>
-                <th>Score & Progress</th>
-                <th style="text-align:center">Weight</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${tableRows}
-            </tbody>
-          </table>
+          <!-- Executive Summary -->
+          <div class="page">
+            <div class="section-header">
+              <h1 class="section-title">Executive Summary</h1>
+              <p class="section-tagline">High-level synthesis of systemic performance across all marketing modules.</p>
+            </div>
+            
+            <div class="score-grid">
+              <div class="score-card">
+                <div class="score-label">Maturity Score</div>
+                <div class="score-value" style="color:${gradeColor} !important;">${results.composite}</div>
+                <div class="grade-badge" style="background:${gradeColor}20; color:${gradeColor}">GRADE: ${results.grade}</div>
+              </div>
+              <div style="display: flex; flex-direction: column; justify-content: center; padding-left: 10pt;">
+                <h3 style="font-size:14pt; font-weight:800; margin-bottom:10pt; color:${PDF_COLORS.primary}">Strategic Outlook</h3>
+                <p style="font-size: 11pt; color: ${PDF_COLORS.text}; line-height: 1.6;">
+                  ${results.composite >= 85 ? 
+                    'The digital infrastructure is exceptionally mature. Strategic focus should remain on high-level moats and incremental performance gains.' : 
+                    results.composite >= 70 ? 
+                    'Demonstrated competence with specific scalability gaps. Addressing the identified optimizations will yield immediate ROI improvements.' : 
+                    results.composite >= 55 ? 
+                    'Median performance with foundational weaknesses. A systematic restructuring of core marketing dimensions is recommended.' : 
+                    'Critical operational failures detected. Urgent intervention is required to stabilize market position and prevent further attrition.'}
+                </p>
+              </div>
+            </div>
 
-          <div class="footer">
-            <span>OMNIAUDIT EXECUTIVE REPORT | ${domain}</span>
-            <span>Page 2 of ${agentsConfig.length + 2}</span>
+            <h3 style="font-size: 10pt; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5pt; color:${PDF_COLORS.textLight}; margin-bottom: 15pt;">Performance Matrix</h3>
+            <table class="summary-table">
+              <thead>
+                <tr>
+                  <th>Marketing Dimension</th>
+                  <th>Performance Index</th>
+                  <th style="text-align:center">Impact Weight</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tableRows}
+              </tbody>
+            </table>
+
+            <div class="page-footer">
+              <span>OMNIAUDIT EXECUTIVE REPORT | ${domain}</span>
+              <span>Page 2 of ${agentsConfig.length + 2}</span>
+            </div>
           </div>
+
+          <!-- Agent Detail Pages -->
+          ${agentDetailPages}
         </div>
-
-        <!-- Agent Detail Pages -->
-        ${agentDetailPages}
-
       </body>
     </html>
   `;
@@ -447,7 +506,6 @@ export function buildDeepDivePdfHtml(results, agent, content) {
   });
 
   // Convert markdown to professional HTML
-  // Simple regex-based markdown converter for the PDF env
   const htmlBody = content
     .replace(/```csv\n([\s\S]+?)```/g, (_, csv) => {
       const rows = csv.trim().split('\n').map(r => r.split(',').map(c => c.trim()));
@@ -456,18 +514,18 @@ export function buildDeepDivePdfHtml(results, agent, content) {
       const bdy = rows.slice(1).map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
       return `<table><thead><tr>${hdr}</tr></thead><tbody>${bdy}</tbody></table>`;
     })
-    .replace(/```[\w]*\n([\s\S]+?)```/g, '<pre><code>$1</code></pre>')
+    .replace(/```[\w]*\n([\s\S]+?)```/g, '<pre style="background:#1e293b; color:#f8fafc; padding:15pt; border-radius:8pt; font-size:9pt; margin:15pt 0;"><code>$1</code></pre>')
     .replace(/^#{1}\s+(.+)$/gm, '<h1>$1</h1>')
     .replace(/^#{2}\s+(.+)$/gm, '<h2>$1</h2>')
     .replace(/^#{3}\s+(.+)$/gm, '<h3>$1</h3>')
     .replace(/^#{4}\s+(.+)$/gm, '<h4>$1</h4>')
     .replace(/^>\s+(.+)$/gm, '<blockquote><p>$1</p></blockquote>')
-    .replace(/^---+$/gm, '<hr>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^---+$/gm, '<hr style="border:none; border-top:1pt solid #e2e8f0; margin:30pt 0;">')
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#0f172a;">$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/`(.+?)`/g, '<code style="background:#f1f5f9; padding:2pt 4pt; border-radius:3pt; font-size:9pt;">$1</code>')
     .replace(/^[-*]\s+(.+)$/gm, '<li>$1</li>')
-    .replace(/^(\d+)\.\s+(.+)$/gm, '<li class="ol">$2</li>')
+    .replace(/^(\d+)\.\s+(.+)$/gm, '<li>$2</li>')
     .replace(/\n\n(?=[^<])/g, '</p><p>')
     .replace(/  \n/g, '<br>');
 
@@ -479,23 +537,27 @@ export function buildDeepDivePdfHtml(results, agent, content) {
         <style>${PDF_CSS}</style>
       </head>
       <body>
-        <div class="page cover-page">
-          <div class="cover-content">
-            <div class="logo-placeholder">OMNIAUDIT&reg;</div>
-            <div class="pill" style="background:rgba(255,255,255,0.1); color:#fff; margin-bottom:20pt; border: 1pt solid rgba(255,255,255,0.2)">DEEP STRATEGY DELIVERABLE</div>
+        <div class="pdf-container">
+          <div class="page cover-page">
+            <div class="logo-text">OMNIAUDIT&reg;</div>
+            <div class="cover-accent" style="background:${PDF_COLORS.accent} !important;"></div>
+            <div style="font-size:10pt; font-weight:800; text-transform:uppercase; letter-spacing:2pt; margin-bottom:15pt; color:${PDF_COLORS.accent} !important;">Deep Strategy Deliverable</div>
             <h1 class="cover-title">${agent.title}</h1>
-            <p class="cover-subtitle">Detailed Strategic Implementation Framework</p>
-            <div class="cover-domain">${domain}</div>
-            <div class="cover-meta">Generated: ${today}</div>
+            <p class="cover-subtitle">Detailed implementation framework and tactical roadmap for optimized ${agent.title.toLowerCase()} performance.</p>
+            
+            <div class="cover-footer">
+              <div class="cover-domain">${domain}</div>
+              <div class="cover-date">Generated: ${today}</div>
+            </div>
           </div>
-        </div>
 
-        <div class="page markdown-content">
-          ${htmlBody}
-          
-          <div class="footer">
-            <span>${agent.title.toUpperCase()} STRATEGY | ${domain}</span>
-            <span>PROPRIETARY DELIVERABLE</span>
+          <div class="page markdown-content">
+            ${htmlBody}
+            
+            <div class="page-footer">
+              <span>${agent.title.toUpperCase()} STRATEGY | ${domain}</span>
+              <span style="font-weight:800;">Proprietary Deliverable</span>
+            </div>
           </div>
         </div>
       </body>
