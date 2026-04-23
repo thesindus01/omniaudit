@@ -278,8 +278,19 @@ function App() {
       
       === FINAL CRITICAL FORMATTING MANDATES ===
       You are an expert UI/UX Executive Copywriter. You MUST format your response using gorgeous, modern Markdown. 
-      The layout MUST look like a high-end, premium $10,000 consulting deliverable:
-      1. NO SPACE-ALIGNED TEXT ALLOWED. ANY time you list metrics, scores, comparisons, timelines, or multi-column data, YOU STRICTLY MUST use a standard Markdown Table (e.g. \`| Header 1 | Header 2 |\n|---|---|\n| Data | Data |\`).
+      The layout MUST look like a high-end, premium $10,000 consulting deliverable.
+      
+      1. CRITICAL TABLE RULE: You MUST NOT use space-aligned text. You MUST use standard Markdown Tables for any metrics, comparisons, or multi-column data.
+      
+      ❌ BAD FORMATTING (NEVER DO THIS):
+      Metric        Industry Benchmark    Target
+      Open Rate     21.0%                 25.0%
+      
+      ✅ GOOD FORMATTING (YOU MUST DO THIS):
+      | Metric | Industry Benchmark | Target |
+      |---|---|---|
+      | Open Rate | 21.0% | 25.0% |
+      
       2. If you are generating a visual ASCII funnel map or terminal output, you MUST wrap it in a Markdown code block (\` \`\`\` \`).
       3. Do NOT wrap tables in code blocks.
       4. DO NOT INDENT TEXT WITH 4 SPACES. This accidentally creates Markdown code blocks and breaks the layout.
