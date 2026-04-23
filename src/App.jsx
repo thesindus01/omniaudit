@@ -284,27 +284,22 @@ function App() {
           ${sectionsHtml}
           </body></html>`;
 
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = pdfHtml;
-        tempDiv.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;background:#fff;z-index:-1;';
-        document.body.appendChild(tempDiv);
-
         const opt = {
-          margin:      [10, 15, 10, 15],
+          margin:      [12, 14, 12, 14],
           filename:    `OMNIAUDIT-${domain.replace(/[^a-z0-9]/gi,'-')}.pdf`,
-          image:       { type: 'jpeg', quality: 0.95 },
-          html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
+          image:       { type: 'jpeg', quality: 0.97 },
+          html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', windowWidth: 794 },
           jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
           pagebreak:   { mode: ['css', 'legacy'] }
         };
 
-        html2pdf().set(opt).from(tempDiv).save().then(() => {
-          document.body.removeChild(tempDiv);
+        // Pass the HTML string directly — html2pdf renders it in its own iframe
+        // so it doesn't need to be in the visible viewport
+        html2pdf().set(opt).from(pdfHtml, 'string').save().then(() => {
           setIsGeneratingPdf(false);
           setPdfReady(true);
         }).catch(err => {
           console.error('PDF error:', err);
-          if (document.body.contains(tempDiv)) document.body.removeChild(tempDiv);
           setIsGeneratingPdf(false);
         });
       } catch (error) {
