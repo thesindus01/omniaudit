@@ -200,47 +200,120 @@ function App() {
   const handleDownloadPdf = () => {
     if (!results) return;
     setIsGeneratingPdf(true);
-    
+
     setTimeout(() => {
       try {
-        // Find the main dashboard container that holds all results
-        const element = document.getElementById('report-content');
-        if (!element) throw new Error("Report container not found");
+        const deliverables = AGENTS_CONFIG
+          .filter(agent => results.stats?.[agent.key]?.fullStrategyDeliverable)
+          .map(agent => ({ title: agent.title, content: results.stats[agent.key].fullStrategyDeliverable }));
+
+        if (deliverables.length === 0) {
+          alert('No Deep Dive reports generated yet. Generate at least one first.');
+          setIsGeneratingPdf(false);
+          return;
+        }
+
+        const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const domain = results.url.replace(/https?:\/\//, '').replace(/\/$/, '');
+
+        const mdToHtml = (md) => md
+          .replace(/```csv\n([\s\S]+?)```/g, (_, csv) => {
+            const rows = csv.trim().split('\n').map(r => r.split(',').map(c => c.trim()));
+            if (!rows.length) return '';
+            const hdr = rows[0].map(h => `<th>${h}</th>`).join('');
+            const bdy = rows.slice(1).map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
+            return `<table><thead><tr>${hdr}</tr></thead><tbody>${bdy}</tbody></table>`;
+          })
+          .replace(/```[\w]*\n([\s\S]+?)```/g, '<pre><code>$1</code></pre>')
+          .replace(/^#{1}\s+(.+)$/gm, '<h1>$1</h1>')
+          .replace(/^#{2}\s+(.+)$/gm, '<h2>$1</h2>')
+          .replace(/^#{3}\s+(.+)$/gm, '<h3>$1</h3>')
+          .replace(/^#{4}\s+(.+)$/gm, '<h4>$1</h4>')
+          .replace(/^>\s+(.+)$/gm, '<blockquote><p>$1</p></blockquote>')
+          .replace(/^---+$/gm, '<hr>')
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.+?)\*/g, '<em>$1</em>')
+          .replace(/`(.+?)`/g, '<code>$1</code>')
+          .replace(/^[-•*]\s+(.+)$/gm, '<li>$1</li>')
+          .replace(/^(\d+)\.\s+(.+)$/gm, '<li class="ol">$2</li>')
+          .replace(/\n\n(?=[^<])/g, '</p><p>')
+          .replace(/  \n/g, '<br>');
+
+        const sectionsHtml = deliverables.map(d => `
+          <div class="section">
+            <p class="section-tag">${d.title} Strategy</p>
+            ${mdToHtml(d.content)}
+          </div>`).join('');
+
+        const pdfHtml = `<!DOCTYPE html><html><head><meta charset="utf-8">
+          <style>
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #1e293b; background: #fff; font-size: 10.5pt; line-height: 1.75; }
+            .cover { background: #1e3a8a; color: #fff; padding: 60pt 40pt; text-align: center; page-break-after: always; }
+            .cover .badge { display: inline-block; border: 1pt solid rgba(255,255,255,0.5); padding: 4pt 14pt; border-radius: 20pt; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 24pt; color: rgba(255,255,255,0.8); }
+            .cover h1 { font-size: 26pt; font-weight: 800; color: #fff; margin-bottom: 10pt; }
+            .cover .domain { font-size: 14pt; color: rgba(255,255,255,0.85); margin-bottom: 8pt; }
+            .cover .date { font-size: 10pt; color: rgba(255,255,255,0.6); }
+            .section { padding: 20pt 0; page-break-before: always; }
+            .section-tag { font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.14em; color: #94a3b8; margin-bottom: 6pt; }
+            h1 { font-size: 20pt; font-weight: 800; color: #1e3a8a; border-bottom: 2pt solid #3b82f6; padding-bottom: 6pt; margin: 16pt 0 8pt; page-break-after: avoid; }
+            h2 { font-size: 13pt; font-weight: 700; color: #1e3a8a; background: #eff6ff; padding: 7pt 12pt; border-left: 3pt solid #3b82f6; margin: 18pt 0 8pt; page-break-after: avoid; }
+            h3 { font-size: 11pt; font-weight: 700; color: #1e40af; margin: 14pt 0 5pt; border-bottom: 0.5pt solid #bfdbfe; padding-bottom: 3pt; page-break-after: avoid; }
+            h4 { font-size: 9pt; font-weight: 700; color: #3b82f6; text-transform: uppercase; letter-spacing: 0.07em; margin: 10pt 0 4pt; }
+            p { margin: 0 0 8pt; color: #334155; }
+            ul { margin: 4pt 0 10pt 18pt; }
+            li { margin: 3pt 0; color: #334155; }
+            strong { color: #0f172a; }
+            em { color: #475569; }
+            blockquote { border-left: 3pt solid #3b82f6; background: #eff6ff; padding: 8pt 14pt; margin: 10pt 0; color: #1e40af; page-break-inside: avoid; }
+            blockquote p { color: #1e40af; margin: 0; }
+            table { width: 100%; border-collapse: collapse; margin: 10pt 0 14pt; page-break-inside: avoid; }
+            th { background: #1e3a8a; color: #fff; padding: 6pt 9pt; text-align: left; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.07em; }
+            td { padding: 5pt 9pt; border-bottom: 0.5pt solid #e2e8f0; color: #334155; font-size: 9.5pt; vertical-align: top; }
+            tr:nth-child(even) td { background: #f8fafc; }
+            pre { background: #f1f5f9; border: 0.5pt solid #cbd5e1; padding: 8pt 12pt; margin: 8pt 0; white-space: pre-wrap; font-size: 8.5pt; page-break-inside: avoid; }
+            code { font-family: 'Courier New', monospace; font-size: 8.5pt; background: #f1f5f9; padding: 1pt 3pt; }
+            hr { border: none; border-top: 0.5pt solid #e2e8f0; margin: 14pt 0; }
+          </style></head><body>
+          <div class="cover">
+            <div class="badge">Confidential Executive Report</div>
+            <h1>OmniAudit Marketing Intelligence</h1>
+            <p class="domain">${domain}</p>
+            <p class="date">${today} &nbsp;|&nbsp; ${deliverables.length} Strategy Report${deliverables.length > 1 ? 's' : ''}</p>
+          </div>
+          ${sectionsHtml}
+          </body></html>`;
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = pdfHtml;
+        tempDiv.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;background:#fff;z-index:-1;';
+        document.body.appendChild(tempDiv);
 
         const opt = {
-          margin:       [15, 15, 15, 15],
-          filename:     `OMNIAUDIT-EXECUTIVE-${results.url.replace(/https?:\/\//, '').replace(/[^a-z0-9]/gi, '-')}.pdf`,
-          image:        { type: 'jpeg', quality: 1.0 },
-          html2canvas:  { 
-            scale: 3, 
-            useCORS: true, 
-            logging: false,
-            backgroundColor: '#0f172a',
-            letterRendering: true,
-            allowTaint: false
-          },
-          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
-          pagebreak:    { mode: ['css', 'legacy'], before: '.pdf-page-break', avoid: ['tr', 'td', '.markdown-body h2', '.markdown-body h3'] }
+          margin:      [10, 15, 10, 15],
+          filename:    `OMNIAUDIT-${domain.replace(/[^a-z0-9]/gi,'-')}.pdf`,
+          image:       { type: 'jpeg', quality: 0.95 },
+          html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
+          jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak:   { mode: ['css', 'legacy'] }
         };
 
-        // We temporarily add a class to the element to make it printer friendly if needed
-        element.classList.add('pdf-mode');
-
-        html2pdf().set(opt).from(element).save().then(() => {
-          element.classList.remove('pdf-mode');
+        html2pdf().set(opt).from(tempDiv).save().then(() => {
+          document.body.removeChild(tempDiv);
           setIsGeneratingPdf(false);
           setPdfReady(true);
         }).catch(err => {
-          console.error("PDF generation failed inside html2pdf:", err);
-          element.classList.remove('pdf-mode');
+          console.error('PDF error:', err);
+          if (document.body.contains(tempDiv)) document.body.removeChild(tempDiv);
           setIsGeneratingPdf(false);
         });
       } catch (error) {
-        console.error("PDF Gen Error:", error);
+        console.error('PDF Gen Error:', error);
         setIsGeneratingPdf(false);
       }
-    }, 500);
+    }, 300);
   };
+
 
   const getStatusIcon = (status) => {
     if (status === 'good') return <CheckCircle2 size={16} className="text-success" />;
