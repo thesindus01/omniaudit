@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { 
   Search, Cpu, LineChart, Shield, TrendingUp, Scale, 
   Check, ArrowRight, Activity, Target, Zap, AlertTriangle, XCircle,
@@ -79,10 +79,10 @@ function App() {
     setPdfReady(false);
 
     const phases = [
-      "Phase 1 — Discovery & Live Crawling...",
-      "Phase 2 — Launching 15 parallel Gemini audit teams...",
-      "Phase 3 — Compiling Composite Data...",
-      "Phase 4 — Evaluating 45+ KPI Dimensions..."
+      "Phase 1 â€” Discovery & Live Crawling...",
+      "Phase 2 â€” Launching 15 parallel Gemini audit teams...",
+      "Phase 3 â€” Compiling Composite Data...",
+      "Phase 4 â€” Evaluating 45+ KPI Dimensions..."
     ];
 
     let currentStep = 0;
@@ -203,15 +203,122 @@ function App() {
 
     setTimeout(() => {
       try {
-        const deliverables = AGENTS_CONFIG
-          .filter(agent => results.stats?.[agent.key]?.fullStrategyDeliverable)
-          .map(agent => ({ title: agent.title, content: results.stats[agent.key].fullStrategyDeliverable }));
+        // Build the PDF from Phase 1 scoring data directly — no Deep Dive required
+        const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const domain = results.url.replace(/https?:\/\//, '').replace(/\/$/, '');
 
-        if (deliverables.length === 0) {
-          alert('No Deep Dive reports generated yet. Generate at least one first.');
-          setIsGeneratingPdf(false);
-          return;
-        }
+        const gradeColor = results.grade === 'A+' || results.grade === 'A' ? '#16a34a' : results.grade === 'B' ? '#2563eb' : results.grade === 'C' ? '#d97706' : '#dc2626';
+
+        const scoreRows = AGENTS_CONFIG.map(agent => {
+          const d = results.stats?.[agent.key];
+          if (!d) return '';
+          const s = d.score ?? 0;
+          const c = s >= 70 ? '#16a34a' : s >= 50 ? '#d97706' : '#dc2626';
+          return `<tr><td style="font-weight:600">${agent.title}</td><td style="color:${c};font-weight:700;text-align:center">${s}/100</td><td style="text-align:center">${agent.weight}</td></tr>`;
+        }).join('');
+
+        const agentSections = AGENTS_CONFIG.map(agent => {
+          const d = results.stats?.[agent.key];
+          if (!d) return '';
+          const s = d.score ?? 0;
+          const barColor = s >= 70 ? '#16a34a' : s >= 50 ? '#d97706' : '#dc2626';
+          const issues = (d.identifiedIssues || []).map(i => `<li>${i}</li>`).join('') || '<li>No critical issues found.</li>';
+          const solutions = (d.proposedSolutions || []).map(sol => `<li>${sol}</li>`).join('') || '<li>Maintain current performance.</li>';
+          const ddHtml = d.fullStrategyDeliverable
+            ? `<div class="deep-dive"><h4>Deep Strategy Deliverable</h4><div class="dd-body">${d.fullStrategyDeliverable.replace(/^#{1}\s+(.+)$/gm,'<h1>$1</h1>').replace(/^#{2}\s+(.+)$/gm,'<h2>$1</h2>').replace(/^#{3}\s+(.+)$/gm,'<h3>$1</h3>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/^[-•]\s+(.+)$/gm,'<li>$1</li>').replace(/\n\n/g,'</p><p>')}</div></div>`
+            : '';
+          return `<div class="agent-section">
+            <div class="agent-header"><span class="agent-title">${agent.title}</span><span class="agent-score" style="color:${barColor}">${s}/100</span></div>
+            <div class="score-bar-bg"><div class="score-bar-fill" style="width:${s}%;background:${barColor}"></div></div>
+            <div class="two-col">
+              <div class="col-box issues"><div class="col-label">⚠ Identified Issues</div><ul>${issues}</ul></div>
+              <div class="col-box solutions"><div class="col-label">✦ Proposed Solutions</div><ul>${solutions}</ul></div>
+            </div>${ddHtml}</div>`;
+        }).join('');
+
+        const pdfHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+          *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Helvetica Neue',Arial,sans-serif;color:#1e293b;background:#fff;font-size:10pt;line-height:1.7}
+          .cover{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%);color:#fff;padding:72pt 48pt;min-height:100vh;display:flex;flex-direction:column;justify-content:center;page-break-after:always}
+          .cover-badge{display:inline-block;border:1pt solid rgba(255,255,255,.35);padding:4pt 16pt;border-radius:20pt;font-size:7pt;text-transform:uppercase;letter-spacing:.16em;color:rgba(255,255,255,.7);margin-bottom:32pt}
+          .cover h1{font-size:30pt;font-weight:900;color:#fff;margin-bottom:10pt;line-height:1.15}
+          .cover .domain{font-size:15pt;color:rgba(255,255,255,.8);margin-bottom:6pt;font-weight:500}
+          .cover .meta{font-size:9.5pt;color:rgba(255,255,255,.5);margin-top:6pt}
+          .cover-grade{display:flex;align-items:center;gap:20pt;margin-top:40pt;padding-top:28pt;border-top:1pt solid rgba(255,255,255,.15)}
+          .grade-badge{font-size:48pt;font-weight:900;line-height:1}
+          .grade-info h3{font-size:13pt;font-weight:700;color:#fff;margin-bottom:4pt}
+          .grade-info p{font-size:9.5pt;color:rgba(255,255,255,.6)}
+          .summary-page{padding:36pt 48pt;page-break-after:always}
+          .page-title{font-size:18pt;font-weight:800;color:#0f172a;margin-bottom:6pt}
+          .page-subtitle{font-size:10pt;color:#64748b;margin-bottom:24pt}
+          table{width:100%;border-collapse:collapse;margin-bottom:20pt}
+          th{background:#1e3a8a;color:#fff;padding:8pt 12pt;font-size:8pt;text-transform:uppercase;letter-spacing:.08em;text-align:left}
+          td{padding:7pt 12pt;border-bottom:.5pt solid #e2e8f0;font-size:9.5pt}
+          tr:nth-child(even) td{background:#f8fafc}
+          .agent-section{padding:28pt 48pt;page-break-before:always;border-top:3pt solid #1e3a8a}
+          .agent-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6pt}
+          .agent-title{font-size:16pt;font-weight:800;color:#0f172a}
+          .agent-score{font-size:18pt;font-weight:900}
+          .score-bar-bg{height:7pt;background:#e2e8f0;border-radius:4pt;margin-bottom:20pt}
+          .score-bar-fill{height:7pt;border-radius:4pt}
+          .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16pt;margin-bottom:16pt}
+          .col-box{padding:14pt;border-radius:8pt}
+          .col-box.issues{background:#fff1f2;border:1pt solid #fecdd3}
+          .col-box.solutions{background:#f0fdf4;border:1pt solid #bbf7d0}
+          .col-label{font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8pt;color:#475569}
+          ul{padding-left:14pt}li{font-size:9pt;margin-bottom:5pt;color:#334155;line-height:1.5}
+          .deep-dive{margin-top:16pt;background:#f8fafc;border:1pt solid #cbd5e1;border-radius:8pt;padding:16pt}
+          .deep-dive h4{font-size:8pt;text-transform:uppercase;letter-spacing:.1em;color:#1e3a8a;font-weight:700;margin-bottom:10pt}
+          .dd-body h1{font-size:13pt;font-weight:800;color:#1e3a8a;margin:10pt 0 5pt}
+          .dd-body h2{font-size:11pt;font-weight:700;color:#1e40af;margin:8pt 0 4pt}
+          .dd-body h3{font-size:10pt;font-weight:700;color:#1e40af;margin:6pt 0 3pt}
+          p{font-size:9.5pt;margin-bottom:6pt;color:#334155}
+          .pdf-footer{padding:16pt 48pt;border-top:1pt solid #e2e8f0;text-align:center;font-size:7.5pt;color:#94a3b8}
+        </style></head><body>
+          <div class="cover">
+            <div class="cover-badge">Confidential Executive Report</div>
+            <h1>OmniAudit Marketing Intelligence</h1>
+            <p class="domain">${domain}</p>
+            <p class="meta">${today} &nbsp;|&nbsp; 14 Agent Modules &nbsp;|&nbsp; AI-Generated</p>
+            <div class="cover-grade">
+              <div class="grade-badge" style="color:${gradeColor}">${results.grade}</div>
+              <div class="grade-info">
+                <h3>Composite Marketing Score: ${results.composite}/100</h3>
+                <p>${results.grade === 'A+' || results.grade === 'A' ? 'Strong performance. Minor optimizations needed.' : results.grade === 'B' ? 'Average. Significant growth opportunities identified.' : 'Critical issues found. Urgent strategic action required.'}</p>
+              </div>
+            </div>
+          </div>
+          <div class="summary-page">
+            <div class="page-title">Executive Score Summary</div>
+            <div class="page-subtitle">All 14 marketing dimensions — scored and weighted by AI analysis.</div>
+            <table><thead><tr><th>Marketing Dimension</th><th style="text-align:center">Score</th><th style="text-align:center">Weight</th></tr></thead>
+            <tbody>${scoreRows}</tbody></table>
+          </div>
+          ${agentSections}
+          <div class="pdf-footer">Generated by OmniAudit · AI-Powered Marketing Intelligence · ${today}</div>
+        </body></html>`;
+
+        const opt = {
+          margin: [10,14,10,14], filename: `OMNIAUDIT-${domain.replace(/[^a-z0-9]/gi,'-')}.pdf`,
+          image: { type:'jpeg', quality:0.98 },
+          html2canvas: { scale:2, useCORS:true, logging:false, backgroundColor:'#ffffff', windowWidth:794 },
+          jsPDF: { unit:'mm', format:'a4', orientation:'portrait' },
+          pagebreak: { mode:['css','legacy'] }
+        };
+
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:-9999;opacity:0;border:none;pointer-events:none;';
+        document.body.appendChild(iframe);
+        const iDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iDoc.open(); iDoc.write(pdfHtml); iDoc.close();
+
+        setTimeout(() => {
+          html2pdf().set(opt).from(iDoc.body).save()
+            .then(() => { document.body.removeChild(iframe); setIsGeneratingPdf(false); setPdfReady(true); })
+            .catch(err => { console.error('PDF error:', err); if(document.body.contains(iframe)) document.body.removeChild(iframe); setIsGeneratingPdf(false); });
+        }, 800);
+
+        // legacy local variable so the rest of the original function still compiles
+        const deliverables = [];
 
         const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         const domain = results.url.replace(/https?:\/\//, '').replace(/\/$/, '');
@@ -234,7 +341,7 @@ function App() {
           .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
           .replace(/\*(.+?)\*/g, '<em>$1</em>')
           .replace(/`(.+?)`/g, '<code>$1</code>')
-          .replace(/^[-•*]\s+(.+)$/gm, '<li>$1</li>')
+          .replace(/^[-â€¢*]\s+(.+)$/gm, '<li>$1</li>')
           .replace(/^(\d+)\.\s+(.+)$/gm, '<li class="ol">$2</li>')
           .replace(/\n\n(?=[^<])/g, '</p><p>')
           .replace(/  \n/g, '<br>');
@@ -370,20 +477,20 @@ function App() {
       === FINAL CRITICAL FORMATTING MANDATES (OVERRIDE ALL SKILL MANUAL TEMPLATES) ===
       You are an expert UI/UX Executive Copywriter producing a premium web-rendered report.
       
-      RULE 0 — DATE: Today's date is ${today}. Use this EXACT date for any "Date:", "Analysis Date:", or "Report Date:" field. NEVER use a made-up or example date.
+      RULE 0 â€” DATE: Today's date is ${today}. Use this EXACT date for any "Date:", "Analysis Date:", or "Report Date:" field. NEVER use a made-up or example date.
       
-      RULE 1 — TITLE: Your H1 title MUST be a human-readable title like "# Email Sequence Strategy" or "# Copy Analysis Report". NEVER use a filename like "EMAIL-SEQUENCES.md" or "COPY-SUGGESTIONS.md" as the title.
+      RULE 1 â€” TITLE: Your H1 title MUST be a human-readable title like "# Email Sequence Strategy" or "# Copy Analysis Report". NEVER use a filename like "EMAIL-SEQUENCES.md" or "COPY-SUGGESTIONS.md" as the title.
       
-      RULE 2 — NO TERMINAL OUTPUT: The Skill Manual may reference a "Terminal Output" section (with === markers). You MUST SKIP IT ENTIRELY. Do not output any === ... === terminal summary blocks. This is a web UI, not a CLI.
+      RULE 2 â€” NO TERMINAL OUTPUT: The Skill Manual may reference a "Terminal Output" section (with === markers). You MUST SKIP IT ENTIRELY. Do not output any === ... === terminal summary blocks. This is a web UI, not a CLI.
       
-      RULE 3 — DATA AS CSV: You MUST NOT use space-aligned text. You MUST NOT use Markdown tables. For ANY metrics, comparisons, timelines, or multi-column data, output a CSV block like this:
+      RULE 3 â€” DATA AS CSV: You MUST NOT use space-aligned text. You MUST NOT use Markdown tables. For ANY metrics, comparisons, timelines, or multi-column data, output a CSV block like this:
       \`\`\`csv
       Framework,Recommendation
-      PAS,Stop waiting for slow imports — precision fasteners in days
+      PAS,Stop waiting for slow imports â€” precision fasteners in days
       AIDA,40 years of American precision. One supplier. Zero compromises.
       \`\`\`
       
-      RULE 4 — EMAIL FIELDS ON SEPARATE LINES: When writing email metadata (Send, Subject Line, Subject Line B, Preview Text, CTA, Goal, Segmentation Notes), EACH field MUST be on its OWN LINE using a markdown line break. Format like this:
+      RULE 4 â€” EMAIL FIELDS ON SEPARATE LINES: When writing email metadata (Send, Subject Line, Subject Line B, Preview Text, CTA, Goal, Segmentation Notes), EACH field MUST be on its OWN LINE using a markdown line break. Format like this:
       **Send:** Immediate (Day 0)  
       **Subject Line:** Your headline here  
       **Preview Text:** Your preview text here  
@@ -391,9 +498,9 @@ function App() {
       **CTA:** Button text  
       **Goal:** What this email achieves  
       
-      RULE 5 — NO 4-SPACE INDENTATION: Never indent text with 4 spaces (it creates unwanted code blocks).
+      RULE 5 â€” NO 4-SPACE INDENTATION: Never indent text with 4 spaces (it creates unwanted code blocks).
       
-      RULE 6 — HIERARCHY: Use \`##\` for phases, \`###\` for subsections, \`####\` for sub-subsections. Use \`> blockquotes\` for key insights.
+      RULE 6 â€” HIERARCHY: Use \`##\` for phases, \`###\` for subsections, \`####\` for sub-subsections. Use \`> blockquotes\` for key insights.
       
       Output ONLY raw markdown. No conversational preamble.
       `;
@@ -401,7 +508,7 @@ function App() {
       const aiResult = await model.generateContent(prompt);
       let outputText = aiResult.response.text();
 
-      // ── Post-processing: Clean up AI output artifacts ──────────────────
+      // â”€â”€ Post-processing: Clean up AI output artifacts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       // 1. Remove .md filename from H1 headings
       outputText = outputText.replace(/^(#{1,2}\s+)([\w-]+\.md)\s*$/gim, (match, hashes, name) => {
         const title = name
@@ -423,12 +530,12 @@ function App() {
       // 5. Remove orphaned "Full report saved to: XXX.md" lines
       outputText = outputText.replace(/^Full report saved to:.*\.md.*$/gmi, '');
       
-      // 6. Fix wrong dates — replace any date that isn't today with today's date
+      // 6. Fix wrong dates â€” replace any date that isn't today with today's date
       outputText = outputText.replace(
         /(\*{0,2}(?:Date|Analysis Date|Report Date):\*{0,2}\s*)((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4})/gi,
         `$1${today}`
       );
-      // ────────────────────────────────────────────────────────────────────
+      // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
       setResults(prev => ({
         ...prev,
@@ -508,10 +615,10 @@ function App() {
             <div className="spinner"></div>
             <h2 className="text-2xl font-bold text-gradient mb-2">Deploying 15 AI Agents...</h2>
             <p className="text-secondary text-lg">
-              {scanStep === 0 && "Phase 1 — Discovery & Live Crawling..."}
-              {scanStep === 1 && "Phase 2 — Launching 15 parallel audit teams..."}
-              {scanStep === 2 && "Phase 3 — Calculating composite scoring..."}
-              {scanStep === 3 && "Phase 4 — Evaluating 45+ KPI Dimensions..."}
+              {scanStep === 0 && "Phase 1 â€” Discovery & Live Crawling..."}
+              {scanStep === 1 && "Phase 2 â€” Launching 15 parallel audit teams..."}
+              {scanStep === 2 && "Phase 3 â€” Calculating composite scoring..."}
+              {scanStep === 3 && "Phase 4 â€” Evaluating 45+ KPI Dimensions..."}
             </p>
           </div>
         )}
@@ -690,7 +797,7 @@ export function DetailedRow({ id, title, score, type, icon, dimensions, identifi
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem', margin: 0, padding: 0 }}>
             {(Array.isArray(identifiedIssues) ? identifiedIssues : []).map((finding, idx) => (
               <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.90rem' }}>
-                <span style={{ color: 'var(--danger)', fontWeight: 'bold' }}>•</span>
+                <span style={{ color: 'var(--danger)', fontWeight: 'bold' }}>â€¢</span>
                 <span style={{ color: 'var(--text-primary)', lineHeight: '1.4' }}>{finding}</span>
               </li>
             ))}
@@ -704,7 +811,7 @@ export function DetailedRow({ id, title, score, type, icon, dimensions, identifi
           <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem', margin: 0, padding: 0 }}>
             {(Array.isArray(proposedSolutions) ? proposedSolutions : []).map((win, idx) => (
               <li key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: '0.90rem' }}>
-                <span style={{ color: 'var(--warning)', fontWeight: 'bold' }}>•</span>
+                <span style={{ color: 'var(--warning)', fontWeight: 'bold' }}>â€¢</span>
                 <span style={{ color: 'var(--text-primary)', lineHeight: '1.4' }}>{win}</span>
               </li>
             ))}
@@ -857,3 +964,4 @@ export function DetailedRow({ id, title, score, type, icon, dimensions, identifi
 }
 
 export default App;
+
