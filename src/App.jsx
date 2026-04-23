@@ -119,52 +119,47 @@ function App() {
 
       const skillManualsText = Object.entries(skillsData).map(([name, content]) => "=== SKILL MANUAL: " + name + " ===\n" + content + "\n").join('\n');
 
-      const prompt = `You are a suite of 14 advanced AI Marketing Agents analyzing this scraped URL text:
+      const prompt = `You are a suite of 14 advanced AI Marketing Agents. Your task is to perform a high-level audit of the following website text:
       ---
       ${payload.text}
       ---
       
-      CRITICAL INSTRUCTION: You MUST strictly base your analysis on the methodologies, templates, and frameworks provided in these Skill Manuals below:
-      
+      CRITICAL INSTRUCTIONS:
+      1. You MUST analyze the site against ALL 14 specialized marketing domains listed below.
+      2. For EVERY SINGLE domain, you must provide a score (0-100), 1-2 KPI dimensions, exactly 3 identifiedIssues, and exactly 3 proposedSolutions.
+      3. Use the methodologies and frameworks provided in these Skill Manuals:
       ${skillManualsText}
       
-      RETURN ONLY PURE JSON. Do not return markdown blocks like "\`\`\`json".
-      You must return EXACTLY this JSON structure containing ALL 14 keys representing the 14 agents. 
-      For each agent, you must provide 'identifiedIssues' (problems found) and 'proposedSolutions' (what needs to be done).
-      NOTE: You do NOT need to generate the massive deep-dive deliverable yet. This is just Phase 1 (Scoring and Executive High-Level).
+      4. RETURN ONLY PURE JSON. DO NOT INCLUDE MARKDOWN BLOCKS.
+      5. You MUST include EVERY one of these 14 keys in the root object:
+         "market-audit", "market-ads", "market-brand", "market-competitors", "market-copy", "market-emails", "market-funnel", "market-landing", "market-launch", "market-proposal", "market-seo", "market-social", "market-report", "market-report-pdf"
       
+      JSON Structure:
       {
-        "market-audit": { "score": 85, "dimensions": [{ "name": "Strategic Alignment", "score": 85, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
-        "market-ads": { "score": 75, "dimensions": [{ "name": "Ad Spend ROI", "score": 75, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
-        "market-brand": { "score": 90, "dimensions": [{ "name": "Brand Consistency", "score": 90, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
-        "market-competitors": { "score": 50, "dimensions": [{ "name": "Market Share", "score": 50, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
-        "market-copy": { "score": 80, "dimensions": [{ "name": "Messaging Clarity", "score": 80, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
-        "market-emails": { "score": 40, "dimensions": [{ "name": "Lead Nurture", "score": 40, "status": "error" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
-        "market-funnel": { "score": 70, "dimensions": [{ "name": "Conversion Rate", "score": 70, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
-        "market-landing": { "score": 85, "dimensions": [{ "name": "UX/UI", "score": 85, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
-        "market-launch": { "score": 60, "dimensions": [{ "name": "Go-to-Market", "score": 60, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
-        "market-proposal": { "score": 55, "dimensions": [{ "name": "Offer Appeal", "score": 55, "status": "warning" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
-        "market-seo": { "score": 80, "dimensions": [{ "name": "Technical SEO", "score": 80, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
-        "market-social": { "score": 45, "dimensions": [{ "name": "Platform Presence", "score": 45, "status": "error" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
-        "market-report": { "score": 90, "dimensions": [{ "name": "Data Synthesis", "score": 90, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] },
-        "market-report-pdf": { "score": 85, "dimensions": [{ "name": "Visual Hierarchy", "score": 85, "status": "good" }], "identifiedIssues": ["..."], "proposedSolutions": ["..."] }
-      }
-      Rules:
-      - Score must be an integer between 0 and 100.
-      - Provide exactly 3 identifiedIssues and 3 proposedSolutions per category.
-      - You MUST ensure ALL strings and array items are wrapped in double quotes. Do not leave text unquoted.
-      - You MUST return 100% valid, parsable JSON.`;
+        "market-audit": { "score": 85, "dimensions": [{ "name": "Strategic Alignment", "score": 85, "status": "good" }], "identifiedIssues": ["issue 1", "issue 2", "issue 3"], "proposedSolutions": ["sol 1", "sol 2", "sol 3"] },
+        ... [repeat for all 14 keys] ...
+      }`;
 
       const result = await model.generateContent(prompt);
       let outputText = result.response.text();
       
-      // Robust extraction: Find the outermost JSON object to ignore any markdown or trailing garbage
+      // Robust extraction
       const jsonMatch = outputText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        outputText = jsonMatch[0];
-      }
+      if (jsonMatch) outputText = jsonMatch[0];
       
       const stats = JSON.parse(outputText);
+
+      // Ensure all 14 agents exist in stats (fallback to 0 if missing)
+      AGENTS_CONFIG.forEach(agent => {
+        if (!stats[agent.key]) {
+          stats[agent.key] = {
+            score: 0,
+            dimensions: [{ name: "Analysis Pending", score: 0, status: "error" }],
+            identifiedIssues: ["Analysis incomplete for this module."],
+            proposedSolutions: ["Re-run audit to capture this dimension."]
+          };
+        }
+      });
 
       clearInterval(interval);
       setScanStep(3);
@@ -191,7 +186,7 @@ function App() {
       setResults({ stats, composite, grade, url, urlText: payload.text, apiKey: payload.key });
     } catch (err) {
       clearInterval(interval);
-      alert("Failed to connect to backend: " + err.message);
+      alert("Analysis failed: " + err.message);
     } finally {
       setIsScanning(false);
     }
@@ -201,113 +196,14 @@ function App() {
     if (!results) return;
     setIsGeneratingPdf(true);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       try {
-        const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const { buildExecutivePdfHtml, renderPdfInIframe } = await import('./pdfTemplates.js');
         const domain = results.url.replace(/https?:\/\//, '').replace(/\/$/, '');
-        const gradeColor = results.grade === 'A+' || results.grade === 'A' ? '#16a34a' : results.grade === 'B' ? '#2563eb' : results.grade === 'C' ? '#d97706' : '#dc2626';
-
-        const scoreRows = AGENTS_CONFIG.map(agent => {
-          const d = results.stats?.[agent.key];
-          if (!d) return '';
-          const s = d.score ?? 0;
-          const c = s >= 70 ? '#16a34a' : s >= 50 ? '#d97706' : '#dc2626';
-          return `<tr><td style="font-weight:600">${agent.title}</td><td style="color:${c};font-weight:700;text-align:center">${s}/100</td><td style="text-align:center">${agent.weight}</td></tr>`;
-        }).join('');
-
-        const agentSections = AGENTS_CONFIG.map(agent => {
-          const d = results.stats?.[agent.key];
-          if (!d) return '';
-          const s = d.score ?? 0;
-          const barColor = s >= 70 ? '#16a34a' : s >= 50 ? '#d97706' : '#dc2626';
-          const issues = (d.identifiedIssues || []).map(i => `<li>${i}</li>`).join('') || '<li>No critical issues found.</li>';
-          const solutions = (d.proposedSolutions || []).map(sol => `<li>${sol}</li>`).join('') || '<li>Maintain current performance.</li>';
-          return `<div class="agent-section">
-            <div class="agent-header"><span class="agent-title">${agent.title}</span><span class="agent-score" style="color:${barColor}">${s}/100</span></div>
-            <div class="score-bar-bg"><div class="score-bar-fill" style="width:${s}%;background:${barColor}"></div></div>
-            <div class="two-col">
-              <div class="col-box issues"><div class="col-label">Identified Issues</div><ul>${issues}</ul></div>
-              <div class="col-box solutions"><div class="col-label">Proposed Solutions</div><ul>${solutions}</ul></div>
-            </div></div>`;
-        }).join('');
-
-        const pdfHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-          *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Helvetica Neue',Arial,sans-serif;color:#1e293b;background:#fff;font-size:10pt;line-height:1.7}
-          .cover{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%);color:#fff;padding:72pt 48pt;min-height:100vh;display:flex;flex-direction:column;justify-content:center;page-break-after:always}
-          .cover-badge{display:inline-block;border:1pt solid rgba(255,255,255,.35);padding:4pt 16pt;border-radius:20pt;font-size:7pt;text-transform:uppercase;letter-spacing:.16em;color:rgba(255,255,255,.7);margin-bottom:32pt}
-          .cover h1{font-size:30pt;font-weight:900;color:#fff;margin-bottom:10pt;line-height:1.15}
-          .cover .domain{font-size:15pt;color:rgba(255,255,255,.8);margin-bottom:6pt;font-weight:500}
-          .cover .meta{font-size:9.5pt;color:rgba(255,255,255,.5);margin-top:6pt}
-          .cover-grade{display:flex;align-items:center;gap:20pt;margin-top:40pt;padding-top:28pt;border-top:1pt solid rgba(255,255,255,.15)}
-          .grade-badge{font-size:48pt;font-weight:900;line-height:1}
-          .grade-info h3{font-size:13pt;font-weight:700;color:#fff;margin-bottom:4pt}
-          .grade-info p{font-size:9.5pt;color:rgba(255,255,255,.6)}
-          .summary-page{padding:36pt 48pt;page-break-after:always}
-          .page-title{font-size:18pt;font-weight:800;color:#0f172a;margin-bottom:6pt}
-          .page-subtitle{font-size:10pt;color:#64748b;margin-bottom:24pt}
-          table{width:100%;border-collapse:collapse;margin-bottom:20pt}
-          th{background:#1e3a8a;color:#fff;padding:8pt 12pt;font-size:8pt;text-transform:uppercase;letter-spacing:.08em;text-align:left}
-          td{padding:7pt 12pt;border-bottom:.5pt solid #e2e8f0;font-size:9.5pt}
-          tr:nth-child(even) td{background:#f8fafc}
-          .agent-section{padding:28pt 48pt;page-break-before:always;border-top:3pt solid #1e3a8a}
-          .agent-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6pt}
-          .agent-title{font-size:16pt;font-weight:800;color:#0f172a}
-          .agent-score{font-size:18pt;font-weight:900}
-          .score-bar-bg{height:7pt;background:#e2e8f0;border-radius:4pt;margin-bottom:20pt}
-          .score-bar-fill{height:7pt;border-radius:4pt}
-          .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16pt;margin-bottom:16pt}
-          .col-box{padding:14pt;border-radius:8pt}
-          .col-box.issues{background:#fff1f2;border:1pt solid #fecdd3}
-          .col-box.solutions{background:#f0fdf4;border:1pt solid #bbf7d0}
-          .col-label{font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8pt;color:#475569}
-          ul{padding-left:14pt}li{font-size:9pt;margin-bottom:5pt;color:#334155;line-height:1.5}
-          p{font-size:9.5pt;margin-bottom:6pt;color:#334155}
-          .pdf-footer{padding:16pt 48pt;border-top:1pt solid #e2e8f0;text-align:center;font-size:7.5pt;color:#94a3b8}
-        </style></head><body>
-          <div class="cover">
-            <div class="cover-badge">Confidential Executive Report</div>
-            <h1>OmniAudit Marketing Intelligence</h1>
-            <p class="domain">${domain}</p>
-            <p class="meta">${today} | 14 Agent Modules | AI-Generated</p>
-            <div class="cover-grade">
-              <div class="grade-badge" style="color:${gradeColor}">${results.grade}</div>
-              <div class="grade-info">
-                <h3>Composite Marketing Score: ${results.composite}/100</h3>
-                <p>${results.grade === 'A+' || results.grade === 'A' ? 'Strong performance. Minor optimizations needed.' : results.grade === 'B' ? 'Average. Significant growth opportunities identified.' : 'Critical issues found. Urgent strategic action required.'}</p>
-              </div>
-            </div>
-          </div>
-          <div class="summary-page">
-            <div class="page-title">Executive Score Summary</div>
-            <div class="page-subtitle">All 14 marketing dimensions scored and weighted by AI analysis.</div>
-            <table><thead><tr><th>Marketing Dimension</th><th style="text-align:center">Score</th><th style="text-align:center">Weight</th></tr></thead>
-            <tbody>${scoreRows}</tbody></table>
-          </div>
-          ${agentSections}
-          <div class="pdf-footer">Generated by OmniAudit | AI-Powered Marketing Intelligence | ${today}</div>
-        </body></html>`;
-
-        const opt = {
-          margin: [10,14,10,14],
-          filename: `OMNIAUDIT-${domain.replace(/[^a-z0-9]/gi,'-')}.pdf`,
-          image: { type:'jpeg', quality:0.98 },
-          html2canvas: { scale:2, useCORS:true, logging:false, backgroundColor:'#ffffff', windowWidth:794 },
-          jsPDF: { unit:'mm', format:'a4', orientation:'portrait' },
-          pagebreak: { mode:['css','legacy'] }
-        };
-
-        const iframe = document.createElement('iframe');
-        iframe.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:-9999;opacity:0;border:none;pointer-events:none;';
-        document.body.appendChild(iframe);
-        const iDoc = iframe.contentDocument || iframe.contentWindow.document;
-        iDoc.open(); iDoc.write(pdfHtml); iDoc.close();
-
-        setTimeout(() => {
-          html2pdf().set(opt).from(iDoc.body).save()
-            .then(() => { document.body.removeChild(iframe); setIsGeneratingPdf(false); setPdfReady(true); })
-            .catch(err => { console.error('PDF error:', err); if(document.body.contains(iframe)) document.body.removeChild(iframe); setIsGeneratingPdf(false); });
-        }, 800);
-
+        const html = buildExecutivePdfHtml(results, AGENTS_CONFIG);
+        await renderPdfInIframe(html, `OMNIAUDIT-${domain.replace(/[^a-z0-9]/gi, '-')}-Executive.pdf`);
+        setIsGeneratingPdf(false);
+        setPdfReady(true);
       } catch (error) {
         console.error('PDF Gen Error:', error);
         setIsGeneratingPdf(false);
@@ -591,6 +487,7 @@ function App() {
                       fullStrategyDeliverable={data.fullStrategyDeliverable}
                       isGeneratingDeepDive={data.isGeneratingDeepDive}
                       onDeepDive={() => handleDeepDive(agent.key)}
+                      onDownloadPdf={() => handleDownloadDeepDivePdf(agent.key)}
                       getStatusIcon={getStatusIcon}
                     />
                   )
@@ -655,7 +552,7 @@ function AgentCard({ title, score, icon, weight, type, desc, onClick }) {
   );
 }
 
-export function DetailedRow({ id, title, score, type, icon, dimensions, identifiedIssues, proposedSolutions, fullStrategyDeliverable, isGeneratingDeepDive, onDeepDive, getStatusIcon }) {
+export function DetailedRow({ id, title, score, type, icon, dimensions, identifiedIssues, proposedSolutions, fullStrategyDeliverable, isGeneratingDeepDive, onDeepDive, onDownloadPdf, getStatusIcon }) {
   return (
     <div id={id} className={`glass-card p-6 flex-col ${type} html2pdf__page-break`} style={{ display: 'flex', gap: '1.25rem', borderLeft: '4px solid var(--agent-color)', scrollMarginTop: '20px' }}>
       {/* Header */}
@@ -732,81 +629,16 @@ export function DetailedRow({ id, title, score, type, icon, dimensions, identifi
 
       {fullStrategyDeliverable && (
         <div style={{ marginTop: '1rem', background: 'rgba(0,0,0,0.2)', padding: '2rem', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h4 className="text-md font-bold uppercase tracking-wider" style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-              <FileText size={18} /> Deep Strategy Deliverable
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
+            <h4 className="text-lg font-bold uppercase tracking-wider" style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+              <FileText size={20} /> Deep Strategy Deliverable
             </h4>
             <button
-              onClick={() => {
-                const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-                const safeTitle = title.replace(/[^a-z0-9]/gi, '-');
-                const htmlBody = fullStrategyDeliverable
-                  .replace(/```csv\n([\s\S]+?)```/g, (_, csv) => {
-                    const rows = csv.trim().split('\n').map(r => r.split(',').map(c => c.trim()));
-                    if (!rows.length) return '';
-                    const hdr = rows[0].map(h => `<th>${h}</th>`).join('');
-                    const bdy = rows.slice(1).map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
-                    return `<table><thead><tr>${hdr}</tr></thead><tbody>${bdy}</tbody></table>`;
-                  })
-                  .replace(/```[\w]*\n([\s\S]+?)```/g, '<pre><code>$1</code></pre>')
-                  .replace(/^#{1}\s+(.+)$/gm, '<h1>$1</h1>')
-                  .replace(/^#{2}\s+(.+)$/gm, '<h2>$1</h2>')
-                  .replace(/^#{3}\s+(.+)$/gm, '<h3>$1</h3>')
-                  .replace(/^#{4}\s+(.+)$/gm, '<h4>$1</h4>')
-                  .replace(/^>\s+(.+)$/gm, '<blockquote><p>$1</p></blockquote>')
-                  .replace(/^---+$/gm, '<hr>')
-                  .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                  .replace(/\*(.+?)\*/g, '<em>$1</em>')
-                  .replace(/`(.+?)`/g, '<code>$1</code>')
-                  .replace(/^[-*]\s+(.+)$/gm, '<li>$1</li>')
-                  .replace(/^(\d+)\.\s+(.+)$/gm, '<li class="ol">$2</li>')
-                  .replace(/\n\n(?=[^<])/g, '</p><p>')
-                  .replace(/  \n/g, '<br>');
-                const pdfHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
-                  *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Helvetica Neue',Arial,sans-serif;color:#1e293b;background:#fff;font-size:10.5pt;line-height:1.75;padding:36pt 48pt}
-                  .cover{background:#1e3a8a;color:#fff;padding:40pt;margin:-36pt -48pt 30pt;text-align:center}
-                  .cover h1{font-size:22pt;font-weight:800;margin-bottom:8pt}.cover p{font-size:10pt;color:rgba(255,255,255,.7)}
-                  h1{font-size:18pt;font-weight:800;color:#1e3a8a;border-bottom:2pt solid #3b82f6;padding-bottom:6pt;margin:16pt 0 8pt;page-break-after:avoid}
-                  h2{font-size:13pt;font-weight:700;color:#1e3a8a;background:#eff6ff;padding:7pt 12pt;border-left:3pt solid #3b82f6;margin:18pt 0 8pt;page-break-after:avoid}
-                  h3{font-size:11pt;font-weight:700;color:#1e40af;margin:14pt 0 5pt;border-bottom:.5pt solid #bfdbfe;padding-bottom:3pt}
-                  h4{font-size:9pt;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:.07em;margin:10pt 0 4pt}
-                  p{margin:0 0 8pt;color:#334155}ul{margin:4pt 0 10pt 18pt}li{margin:3pt 0;color:#334155}
-                  strong{color:#0f172a}em{color:#475569}
-                  blockquote{border-left:3pt solid #3b82f6;background:#eff6ff;padding:8pt 14pt;margin:10pt 0;color:#1e40af;page-break-inside:avoid}
-                  blockquote p{color:#1e40af;margin:0}
-                  table{width:100%;border-collapse:collapse;margin:10pt 0 14pt;page-break-inside:avoid}
-                  th{background:#1e3a8a;color:#fff;padding:6pt 9pt;text-align:left;font-size:8pt;text-transform:uppercase;letter-spacing:.07em}
-                  td{padding:5pt 9pt;border-bottom:.5pt solid #e2e8f0;color:#334155;font-size:9.5pt;vertical-align:top}
-                  tr:nth-child(even) td{background:#f8fafc}
-                  pre{background:#f1f5f9;border:.5pt solid #cbd5e1;padding:8pt 12pt;margin:8pt 0;white-space:pre-wrap;font-size:8.5pt;page-break-inside:avoid}
-                  code{font-family:'Courier New',monospace;font-size:8.5pt;background:#f1f5f9;padding:1pt 3pt}
-                  hr{border:none;border-top:.5pt solid #e2e8f0;margin:14pt 0}
-                </style></head><body>
-                <div class="cover"><h1>${title} Strategy</h1><p>${today}</p></div>
-                ${htmlBody}
-                </body></html>`;
-                const opt = {
-                  margin: [12,14,12,14], filename: `OMNIAUDIT-${safeTitle}-DeepDive.pdf`,
-                  image: { type:'jpeg', quality:0.97 },
-                  html2canvas: { scale:2, useCORS:true, logging:false, backgroundColor:'#ffffff', windowWidth:794 },
-                  jsPDF: { unit:'mm', format:'a4', orientation:'portrait' },
-                  pagebreak: { mode:['css','legacy'] }
-                };
-                const iframe = document.createElement('iframe');
-                iframe.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:-9999;opacity:0;border:none;pointer-events:none;';
-                document.body.appendChild(iframe);
-                const iDoc = iframe.contentDocument || iframe.contentWindow.document;
-                iDoc.open(); iDoc.write(pdfHtml); iDoc.close();
-                setTimeout(() => {
-                  html2pdf().set(opt).from(iDoc.body).save()
-                    .then(() => { document.body.removeChild(iframe); })
-                    .catch(err => { console.error('PDF err:', err); if(document.body.contains(iframe)) document.body.removeChild(iframe); });
-                }, 600);
-              }}
+              onClick={onDownloadPdf}
               className="btn-primary"
-              style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem', fontSize: '0.9rem', background: '#059669' }}
             >
-              <Download size={16} /> Download Deep Dive PDF
+              <Download size={18} /> Download Premium PDF
             </button>
           </div>
           <ReactMarkdown 
