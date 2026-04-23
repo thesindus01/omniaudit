@@ -233,7 +233,11 @@ function App() {
         scrollY: 0
       },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'] }
+      pagebreak: { 
+        mode: ['avoid-all', 'css', 'legacy'],
+        before: '.page',
+        avoid: ['.finding-box', '.kpi-container', '.section', 'table', 'blockquote', 'pre', 'li']
+      }
     };
 
     try {

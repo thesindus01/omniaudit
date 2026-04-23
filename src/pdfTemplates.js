@@ -25,33 +25,28 @@ const PDF_CSS = `
     box-sizing: border-box; 
     -webkit-print-color-adjust: exact !important; 
     color-adjust: exact !important;
-    margin: 0;
-    padding: 0;
   }
   
   html, body {
-    background: ${PDF_COLORS.bg} !important;
+    background: white !important;
     color: ${PDF_COLORS.text} !important;
     font-family: 'Inter', -apple-system, sans-serif;
-    width: 210mm; /* A4 Width */
     margin: 0;
     padding: 0;
+    width: 210mm;
   }
 
   .pdf-container {
     background: white !important;
-    color: ${PDF_COLORS.text} !important;
   }
 
   .page {
     width: 210mm;
-    min-height: 297mm;
-    padding: 25mm 20mm;
+    padding: 20mm 20mm 30mm 20mm; /* Extra bottom padding for footer space */
     position: relative;
     page-break-after: always;
     background: white !important;
-    display: flex;
-    flex-direction: column;
+    display: block;
     overflow: hidden;
   }
 
@@ -59,9 +54,11 @@ const PDF_CSS = `
   .cover-page {
     background: ${PDF_COLORS.primary} !important;
     color: white !important;
+    padding: 60mm 20mm;
+    min-height: 297mm;
+    display: flex;
+    flex-direction: column;
     justify-content: center;
-    align-items: flex-start;
-    padding: 40mm 20mm;
   }
 
   .cover-accent {
@@ -76,7 +73,6 @@ const PDF_CSS = `
     font-weight: 800;
     letter-spacing: -0.02em;
     margin-bottom: 60pt;
-    opacity: 0.95;
     color: white !important;
   }
 
@@ -93,7 +89,7 @@ const PDF_CSS = `
     font-weight: 300;
     color: rgba(255,255,255,0.7) !important;
     margin-bottom: 80pt;
-    max-width: 80%;
+    max-width: 85%;
   }
 
   .cover-footer {
@@ -119,11 +115,19 @@ const PDF_CSS = `
     color: rgba(255,255,255,0.5) !important;
   }
 
+  /* Robust Page Break Prevention */
+  .section, .finding-box, .score-grid, .summary-table, .agent-header, .kpi-container {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    margin-bottom: 20pt;
+  }
+
   /* Section Headers */
   .section-header {
     margin-bottom: 30pt;
     border-bottom: 2pt solid ${PDF_COLORS.border};
     padding-bottom: 10pt;
+    page-break-after: avoid;
   }
 
   .section-title {
@@ -182,23 +186,25 @@ const PDF_CSS = `
   .summary-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20pt;
+    margin-top: 10pt;
   }
 
   .summary-table th {
     text-align: left;
     padding: 12pt;
     border-bottom: 2pt solid ${PDF_COLORS.primary};
-    font-size: 10pt;
-    font-weight: 700;
+    font-size: 9pt;
+    font-weight: 800;
     color: ${PDF_COLORS.primary} !important;
     text-transform: uppercase;
+    letter-spacing: 0.5pt;
   }
 
   .summary-table td {
     padding: 14pt 12pt;
     border-bottom: 1pt solid ${PDF_COLORS.border};
     vertical-align: middle;
+    font-size: 10pt;
   }
 
   .agent-score-bar-bg {
@@ -216,12 +222,12 @@ const PDF_CSS = `
     border-radius: 4pt;
   }
 
-  /* Agent Detail Page */
+  /* Agent Detail Page Header */
   .agent-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30pt;
+    margin-bottom: 25pt;
     padding-bottom: 15pt;
     border-bottom: 2pt solid ${PDF_COLORS.secondary};
   }
@@ -230,11 +236,13 @@ const PDF_CSS = `
     font-size: 22pt;
     font-weight: 800;
     color: ${PDF_COLORS.primary} !important;
+    margin: 0;
   }
 
   .agent-meta p {
     font-size: 10pt;
     color: ${PDF_COLORS.textLight} !important;
+    margin: 4pt 0 0;
   }
 
   .agent-score-pill {
@@ -245,20 +253,23 @@ const PDF_CSS = `
     font-size: 28pt;
     font-weight: 800;
     color: ${PDF_COLORS.primary} !important;
+    line-height: 1;
   }
 
   /* Findings Layout */
   .findings-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20pt;
-    margin-bottom: 30pt;
+    gap: 15pt;
+    margin-bottom: 20pt;
+    page-break-inside: avoid;
   }
 
   .finding-box {
-    padding: 20pt;
+    padding: 15pt;
     border-radius: 10pt;
     border: 1pt solid transparent;
+    height: 100%;
   }
 
   .finding-box.critical {
@@ -272,23 +283,26 @@ const PDF_CSS = `
   }
 
   .finding-box h4 {
-    font-size: 10pt;
+    font-size: 9pt;
     font-weight: 800;
     text-transform: uppercase;
-    margin-bottom: 12pt;
+    margin-bottom: 10pt;
     display: flex;
     align-items: center;
     gap: 6pt;
+    color: inherit;
   }
 
   .finding-list {
     list-style: none;
+    margin: 0;
+    padding: 0;
   }
 
   .finding-list li {
-    font-size: 10.5pt;
-    margin-bottom: 8pt;
-    padding-left: 14pt;
+    font-size: 10pt;
+    margin-bottom: 6pt;
+    padding-left: 12pt;
     position: relative;
     line-height: 1.4;
   }
@@ -300,10 +314,44 @@ const PDF_CSS = `
     font-weight: 800;
   }
 
+  /* KPI Box */
+  .kpi-container {
+    background: #f8fafc !important;
+    padding: 20pt;
+    border-radius: 12pt;
+    border: 1pt solid ${PDF_COLORS.border};
+  }
+
+  .kpi-title {
+    font-size: 9pt; 
+    font-weight: 800; 
+    text-transform: uppercase; 
+    letter-spacing: 1.5pt; 
+    margin-bottom: 15pt; 
+    color:${PDF_COLORS.primary} !important;
+  }
+
+  .kpi-grid {
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 15pt 30pt;
+  }
+
+  .kpi-item {
+    display:flex; 
+    justify-content:space-between; 
+    align-items:center; 
+    padding: 6pt 0; 
+    border-bottom: 1pt solid ${PDF_COLORS.border};
+  }
+
   /* Footer */
   .page-footer {
-    margin-top: auto;
-    padding-top: 15pt;
+    position: absolute;
+    bottom: 15mm;
+    left: 20mm;
+    right: 20mm;
+    padding-top: 10pt;
     border-top: 1pt solid ${PDF_COLORS.border};
     display: flex;
     justify-content: space-between;
@@ -314,19 +362,20 @@ const PDF_CSS = `
   }
 
   /* Deep Dive Markdown Styling */
-  .markdown-content h1 { font-size: 28pt; font-weight: 800; margin-bottom: 20pt; border-bottom: 3pt solid ${PDF_COLORS.secondary}; padding-bottom: 10pt; }
-  .markdown-content h2 { font-size: 18pt; font-weight: 700; margin: 30pt 0 15pt; color: ${PDF_COLORS.primary} !important; border-left: 4pt solid ${PDF_COLORS.secondary}; padding-left: 15pt; }
-  .markdown-content h3 { font-size: 14pt; font-weight: 700; margin: 20pt 0 10pt; color: ${PDF_COLORS.secondary} !important; }
+  .markdown-content h1 { font-size: 28pt; font-weight: 800; margin-bottom: 20pt; border-bottom: 3pt solid ${PDF_COLORS.secondary}; padding-bottom: 10pt; page-break-after: avoid; }
+  .markdown-content h2 { font-size: 18pt; font-weight: 700; margin: 30pt 0 15pt; color: ${PDF_COLORS.primary} !important; border-left: 4pt solid ${PDF_COLORS.secondary}; padding-left: 15pt; page-break-after: avoid; }
+  .markdown-content h3 { font-size: 14pt; font-weight: 700; margin: 20pt 0 10pt; color: ${PDF_COLORS.secondary} !important; page-break-after: avoid; }
   .markdown-content p { margin-bottom: 12pt; font-size: 11pt; line-height: 1.6; }
   .markdown-content ul, .markdown-content ol { margin-bottom: 20pt; padding-left: 20pt; }
-  .markdown-content li { margin-bottom: 8pt; font-size: 11pt; }
-  .markdown-content table { width: 100%; border-collapse: collapse; margin: 25pt 0; }
+  .markdown-content li { margin-bottom: 8pt; font-size: 11pt; page-break-inside: avoid; }
+  .markdown-content table { width: 100%; border-collapse: collapse; margin: 25pt 0; page-break-inside: avoid; }
   .markdown-content th { background: ${PDF_COLORS.primary} !important; color: white !important; padding: 10pt; text-align: left; font-size: 9pt; }
   .markdown-content td { padding: 10pt; border-bottom: 1pt solid ${PDF_COLORS.border}; font-size: 10pt; }
-  .markdown-content blockquote { background: #f8fafc !important; border-left: 5pt solid ${PDF_COLORS.accent}; padding: 15pt 20pt; margin: 20pt 0; font-style: italic; }
+  .markdown-content blockquote { background: #f8fafc !important; border-left: 5pt solid ${PDF_COLORS.accent}; padding: 15pt 20pt; margin: 20pt 0; font-style: italic; page-break-inside: avoid; }
+  .markdown-content pre { page-break-inside: avoid; }
 
-  /* Page Breaks */
-  .keep-together { page-break-inside: avoid; }
+  /* Utilities */
+  .keep-together { page-break-inside: avoid !important; break-inside: avoid !important; }
 `;
 
 export function buildExecutivePdfHtml(results, agentsConfig) {
@@ -383,7 +432,7 @@ export function buildExecutivePdfHtml(results, agentsConfig) {
           </div>
           <div class="agent-score-pill">
             <div class="pill-value" style="color:${scoreColor} !important;">${d.score || 0}<span style="font-size:12pt; opacity:0.5;">/100</span></div>
-            <div style="font-size:9pt; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:${scoreColor}">${d.score >= 70 ? 'Optimal' : d.score >= 50 ? 'Needs Work' : 'Critical'}</div>
+            <div style="font-size:8pt; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:${scoreColor}">${d.score >= 70 ? 'Optimal' : d.score >= 50 ? 'Needs Work' : 'Critical'}</div>
           </div>
         </div>
 
@@ -402,11 +451,11 @@ export function buildExecutivePdfHtml(results, agentsConfig) {
           </div>
         </div>
 
-        <div style="background:#f8fafc !important; padding: 25pt; border-radius: 12pt; border: 1pt solid ${PDF_COLORS.border};">
-          <h4 style="font-size: 10pt; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15pt; color:${PDF_COLORS.primary}">KPI Dimension Analysis</h4>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20pt;">
+        <div class="kpi-container">
+          <h4 class="kpi-title">KPI Dimension Analysis</h4>
+          <div class="kpi-grid">
             ${(d.dimensions || []).map(dim => `
-              <div style="display:flex; justify-content:space-between; align-items:center; padding: 8pt 0; border-bottom: 1pt solid ${PDF_COLORS.border};">
+              <div class="kpi-item">
                 <span style="font-size: 10pt; font-weight:500;">${dim.name}</span>
                 <span style="font-weight: 800; color:${dim.status === 'good' ? PDF_COLORS.success : dim.status === 'warning' ? PDF_COLORS.warning : PDF_COLORS.danger}">${dim.score}</span>
               </div>
@@ -471,19 +520,21 @@ export function buildExecutivePdfHtml(results, agentsConfig) {
               </div>
             </div>
 
-            <h3 style="font-size: 10pt; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5pt; color:${PDF_COLORS.textLight}; margin-bottom: 15pt;">Performance Matrix</h3>
-            <table class="summary-table">
-              <thead>
-                <tr>
-                  <th>Marketing Dimension</th>
-                  <th>Performance Index</th>
-                  <th style="text-align:center">Impact Weight</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${tableRows}
-              </tbody>
-            </table>
+            <div class="section">
+              <h3 style="font-size: 10pt; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5pt; color:${PDF_COLORS.textLight}; margin-bottom: 15pt;">Performance Matrix</h3>
+              <table class="summary-table">
+                <thead>
+                  <tr>
+                    <th>Marketing Dimension</th>
+                    <th>Performance Index</th>
+                    <th style="text-align:center">Impact Weight</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${tableRows}
+                </tbody>
+              </table>
+            </div>
 
             <div class="page-footer">
               <span>OMNIAUDIT EXECUTIVE REPORT | ${domain}</span>
@@ -512,9 +563,9 @@ export function buildDeepDivePdfHtml(results, agent, content) {
       if (!rows.length) return '';
       const hdr = rows[0].map(h => `<th>${h}</th>`).join('');
       const bdy = rows.slice(1).map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
-      return `<table><thead><tr>${hdr}</tr></thead><tbody>${bdy}</tbody></table>`;
+      return `<div class="section"><table><thead><tr>${hdr}</tr></thead><tbody>${bdy}</tbody></table></div>`;
     })
-    .replace(/```[\w]*\n([\s\S]+?)```/g, '<pre style="background:#1e293b; color:#f8fafc; padding:15pt; border-radius:8pt; font-size:9pt; margin:15pt 0;"><code>$1</code></pre>')
+    .replace(/```[\w]*\n([\s\S]+?)```/g, '<div class="section"><pre style="background:#1e293b; color:#f8fafc; padding:15pt; border-radius:8pt; font-size:9pt; margin:15pt 0;"><code>$1</code></pre></div>')
     .replace(/^#{1}\s+(.+)$/gm, '<h1>$1</h1>')
     .replace(/^#{2}\s+(.+)$/gm, '<h2>$1</h2>')
     .replace(/^#{3}\s+(.+)$/gm, '<h3>$1</h3>')
