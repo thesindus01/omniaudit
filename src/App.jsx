@@ -632,7 +632,7 @@ export function DetailedRow({ id, title, score, type, icon, dimensions, identifi
                   if (!csvData) return null;
                   
                   // Parse CSV properly handling quotes and commas
-                  const rows = csvData.split('\\n').map(row => {
+                  const rows = csvData.split('\n').filter(r => r.trim()).map(row => {
                     const columns = [];
                     let current = '';
                     let inQuotes = false;
