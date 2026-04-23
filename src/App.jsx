@@ -208,17 +208,19 @@ function App() {
         if (!element) throw new Error("Report container not found");
 
         const opt = {
-          margin:       [10, 10, 10, 10],
-          filename:     `OMNIAUDIT-EXECUTIVE-${results.url.replace(/https?:\/\//, '').replace(/\//g, '')}.pdf`,
-          image:        { type: 'jpeg', quality: 0.98 },
+          margin:       [15, 15, 15, 15],
+          filename:     `OMNIAUDIT-EXECUTIVE-${results.url.replace(/https?:\/\//, '').replace(/[^a-z0-9]/gi, '-')}.pdf`,
+          image:        { type: 'jpeg', quality: 1.0 },
           html2canvas:  { 
-            scale: 2, 
+            scale: 3, 
             useCORS: true, 
             logging: false,
-            backgroundColor: '#0f172a' // match dark theme
+            backgroundColor: '#0f172a',
+            letterRendering: true,
+            allowTaint: false
           },
-          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+          pagebreak:    { mode: ['css', 'legacy'], before: '.pdf-page-break', avoid: ['tr', 'td', '.markdown-body h2', '.markdown-body h3'] }
         };
 
         // We temporarily add a class to the element to make it printer friendly if needed
@@ -263,6 +265,7 @@ function App() {
       const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
       
       const skillManual = skillsData[agentKey];
+      const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
       
       const prompt = `You are the ultimate ${agentKey} Marketing Agent.
       You are running a Deep Dive Strategy Execution on the following scraped website data:
@@ -279,6 +282,8 @@ function App() {
       === FINAL CRITICAL FORMATTING MANDATES (OVERRIDE ALL SKILL MANUAL TEMPLATES) ===
       You are an expert UI/UX Executive Copywriter producing a premium web-rendered report.
       
+      RULE 0 — DATE: Today's date is ${today}. Use this EXACT date for any "Date:", "Analysis Date:", or "Report Date:" field. NEVER use a made-up or example date.
+      
       RULE 1 — TITLE: Your H1 title MUST be a human-readable title like "# Email Sequence Strategy" or "# Copy Analysis Report". NEVER use a filename like "EMAIL-SEQUENCES.md" or "COPY-SUGGESTIONS.md" as the title.
       
       RULE 2 — NO TERMINAL OUTPUT: The Skill Manual may reference a "Terminal Output" section (with === markers). You MUST SKIP IT ENTIRELY. Do not output any === ... === terminal summary blocks. This is a web UI, not a CLI.
@@ -290,9 +295,17 @@ function App() {
       AIDA,40 years of American precision. One supplier. Zero compromises.
       \`\`\`
       
-      RULE 4 — NO 4-SPACE INDENTATION: Never indent text with 4 spaces (it creates unwanted code blocks).
+      RULE 4 — EMAIL FIELDS ON SEPARATE LINES: When writing email metadata (Send, Subject Line, Subject Line B, Preview Text, CTA, Goal, Segmentation Notes), EACH field MUST be on its OWN LINE using a markdown line break. Format like this:
+      **Send:** Immediate (Day 0)  
+      **Subject Line:** Your headline here  
+      **Preview Text:** Your preview text here  
+      (Then the email body on a new paragraph)
+      **CTA:** Button text  
+      **Goal:** What this email achieves  
       
-      RULE 5 — HIERARCHY: Use \`##\` for phases, \`###\` for subsections, \`####\` for sub-subsections. Use \`> blockquotes\` for key insights.
+      RULE 5 — NO 4-SPACE INDENTATION: Never indent text with 4 spaces (it creates unwanted code blocks).
+      
+      RULE 6 — HIERARCHY: Use \`##\` for phases, \`###\` for subsections, \`####\` for sub-subsections. Use \`> blockquotes\` for key insights.
       
       Output ONLY raw markdown. No conversational preamble.
       `;
@@ -301,7 +314,7 @@ function App() {
       let outputText = aiResult.response.text();
 
       // ── Post-processing: Clean up AI output artifacts ──────────────────
-      // 1. Remove .md filename from H1 headings (e.g. "# EMAIL-SEQUENCES.md" → "# Email Sequences")
+      // 1. Remove .md filename from H1 headings
       outputText = outputText.replace(/^(#{1,2}\s+)([\w-]+\.md)\s*$/gim, (match, hashes, name) => {
         const title = name
           .replace(/\.md$/i, '')
@@ -310,10 +323,10 @@ function App() {
         return `${hashes}${title}`;
       });
 
-      // 2. Remove inline .md references from headings (e.g. "## Copy Analysis & Suggestions: COPY-SUGGESTIONS.md")
+      // 2. Remove inline .md references from headings
       outputText = outputText.replace(/(#{1,6}[^\n]+?)\s+[\w-]+\.md\b/gi, '$1');
 
-      // 3. Strip terminal output code blocks (=== markers) — useless in web UI
+      // 3. Strip terminal output code blocks (=== markers)
       outputText = outputText.replace(/```[^\n]*\n?(?:={3,}[\s\S]*?={3,}|[\s\S]*?={3,})[\s\S]*?```/g, '');
 
       // 4. Strip loose === terminal lines that aren't inside code blocks
@@ -321,6 +334,12 @@ function App() {
 
       // 5. Remove orphaned "Full report saved to: XXX.md" lines
       outputText = outputText.replace(/^Full report saved to:.*\.md.*$/gmi, '');
+      
+      // 6. Fix wrong dates — replace any date that isn't today with today's date
+      outputText = outputText.replace(
+        /(\*{0,2}(?:Date|Analysis Date|Report Date):\*{0,2}\s*)((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4})/gi,
+        `$1${today}`
+      );
       // ────────────────────────────────────────────────────────────────────
 
       setResults(prev => ({
