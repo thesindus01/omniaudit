@@ -280,22 +280,19 @@ function App() {
       You are an expert UI/UX Executive Copywriter. You MUST format your response using gorgeous, modern Markdown. 
       The layout MUST look like a high-end, premium $10,000 consulting deliverable.
       
-      1. CRITICAL TABLE RULE: You MUST NOT use space-aligned text. You MUST use standard Markdown Tables for any metrics, comparisons, or multi-column data.
+      1. CRITICAL DATA RULE: You MUST NOT use space-aligned text. You MUST NOT use Markdown Tables. 
+      Instead, for ANY metrics, comparisons, timelines, or multi-column data, you MUST output a CSV (Comma Separated Values) block wrapped in a markdown codeblock like this:
       
-      ❌ BAD FORMATTING (NEVER DO THIS):
-      Metric        Industry Benchmark    Target
-      Open Rate     21.0%                 25.0%
-      
-      ✅ GOOD FORMATTING (YOU MUST DO THIS):
-      | Metric | Industry Benchmark | Target |
-      |---|---|---|
-      | Open Rate | 21.0% | 25.0% |
+      \`\`\`csv
+      Metric,Industry Benchmark,Target
+      Open Rate,21.0%,25.0%
+      Click Rate,2.5%,3.5%
+      \`\`\`
       
       2. If you are generating a visual ASCII funnel map or terminal output, you MUST wrap it in a Markdown code block (\` \`\`\` \`).
-      3. Do NOT wrap tables in code blocks.
-      4. DO NOT INDENT TEXT WITH 4 SPACES. This accidentally creates Markdown code blocks and breaks the layout.
-      5. Use \`> blockquotes\` for key insights, takeaways, and revenue impacts.
-      6. Use heavily structured Headings (\`#\`, \`##\`, \`###\`), bolding, and italics to create an interactive, scannable visual hierarchy.
+      3. DO NOT INDENT TEXT WITH 4 SPACES. This accidentally creates Markdown code blocks and breaks the layout.
+      4. Use \`> blockquotes\` for key insights, takeaways, and revenue impacts.
+      5. Use heavily structured Headings (\`#\`, \`##\`, \`###\`), bolding, and italics to create an interactive, scannable visual hierarchy.
       
       Output ONLY raw markdown. Do not include any conversational preamble.
       `;
@@ -625,6 +622,75 @@ export function DetailedRow({ id, title, score, type, icon, dimensions, identifi
           <ReactMarkdown 
             className="markdown-body" 
             remarkPlugins={[remarkGfm]}
+            components={{
+              code({node, inline, className, children, ...props}) {
+                const match = /language-(\w+)/.exec(className || '');
+                const language = match ? match[1] : '';
+                
+                if (!inline && language === 'csv') {
+                  const csvData = String(children).trim();
+                  if (!csvData) return null;
+                  
+                  // Parse CSV properly handling quotes and commas
+                  const rows = csvData.split('\\n').map(row => {
+                    const columns = [];
+                    let current = '';
+                    let inQuotes = false;
+                    for (let i = 0; i < row.length; i++) {
+                      if (row[i] === '"') {
+                        inQuotes = !inQuotes;
+                      } else if (row[i] === ',' && !inQuotes) {
+                        columns.push(current.trim());
+                        current = '';
+                      } else {
+                        current += row[i];
+                      }
+                    }
+                    columns.push(current.trim());
+                    return columns;
+                  });
+
+                  if (rows.length === 0) return null;
+                  const headers = rows[0];
+                  const bodyRows = rows.slice(1);
+
+                  return (
+                    <div style={{ overflowX: 'auto', margin: '2rem 0' }}>
+                      <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, background: 'rgba(15, 23, 42, 0.6)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                        <thead>
+                          <tr>
+                            {headers.map((h, i) => (
+                              <th key={i} style={{ background: 'linear-gradient(90deg, rgba(30, 58, 138, 0.8), rgba(15, 23, 42, 0.8))', color: '#93c5fd', padding: '1.25rem 1.5rem', textAlign: 'left', borderBottom: '2px solid rgba(59, 130, 246, 0.4)', textTransform: 'uppercase', fontSize: '0.85rem' }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {bodyRows.map((row, i) => (
+                            <tr key={i} style={{ backgroundColor: i % 2 === 0 ? 'transparent' : 'rgba(59, 130, 246, 0.05)' }}>
+                              {row.map((cell, j) => (
+                                <td key={j} style={{ padding: '1rem 1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', color: '#e2e8f0', fontSize: '0.95rem' }}>{cell}</td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                }
+
+                return !inline ? (
+                  <pre className={className} {...props}>
+                    <code className={className} {...props}>
+                      {children}
+                    </code>
+                  </pre>
+                ) : (
+                  <code className={className} {...props}>
+                    {children}
+                  </code>
+                )
+              }
+            }}
           >
             {fullStrategyDeliverable}
           </ReactMarkdown>
