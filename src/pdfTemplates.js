@@ -1,4 +1,6 @@
 
+import html2pdf from 'html2pdf.js';
+
 /**
  * OMNIAUDIT PREMIUM PDF TEMPLATE ENGINE
  * High-fidelity, executive-grade document generation.
@@ -289,9 +291,9 @@ export function buildExecutivePdfHtml(results, agentsConfig) {
         <td>
           <div style="display:flex; align-items:center; gap:8pt;">
             <div style="width:60pt; height:6pt; background:#e2e8f0; border-radius:3pt; overflow:hidden;">
-              <div style="width:${score}%; height:100%; background:${color};"></div>
+              <div style="width:${typeof score === 'number' ? score : 0}%; height:100%; background:${color};"></div>
             </div>
-            <span style="font-weight:700; color:${color}">${score}/100</span>
+            <span style="font-weight:700; color:${color}">${score}${typeof score === 'number' ? '/100' : ''}</span>
           </div>
         </td>
         <td style="text-align:center; color:${PDF_COLORS.textLight}">${agent.weight}</td>
@@ -304,8 +306,7 @@ export function buildExecutivePdfHtml(results, agentsConfig) {
     const d = results.stats?.[agent.key];
     if (!d) return '';
 
-    const scoreColor = d.score >= 70 ? PDF_COLORS.success : 
-                       d.score >= 50 ? PDF_COLORS.warning : PDF_COLORS.danger;
+    const scoreColor = (d.score && typeof d.score === 'number') ? (d.score >= 70 ? PDF_COLORS.success : d.score >= 50 ? PDF_COLORS.warning : PDF_COLORS.danger) : PDF_COLORS.textLight;
 
     const issues = (d.identifiedIssues || []).map(i => `<li>${i}</li>`).join('');
     const solutions = (d.proposedSolutions || []).map(s => `<li>${s}</li>`).join('');
@@ -321,7 +322,7 @@ export function buildExecutivePdfHtml(results, agentsConfig) {
             </div>
           </div>
           <div style="text-align: right">
-            <div style="font-size: 24pt; font-weight: 800; color:${scoreColor}">${d.score}<span style="font-size: 12pt; opacity: 0.5;">/100</span></div>
+            <div style="font-size: 24pt; font-weight: 800; color:${scoreColor}">${d.score || 0}<span style="font-size: 12pt; opacity: 0.5;">/100</span></div>
             <div class="pill" style="background:${scoreColor}20; color:${scoreColor}">
               ${d.score >= 70 ? 'Optimal' : d.score >= 50 ? 'Needs Work' : 'Critical'}
             </div>
@@ -500,47 +501,4 @@ export function buildDeepDivePdfHtml(results, agent, content) {
       </body>
     </html>
   `;
-}
-
-export async function renderPdfInIframe(html, filename) {
-  return new Promise((resolve, reject) => {
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:-9999;opacity:0;border:none;pointer-events:none;';
-    document.body.appendChild(iframe);
-    
-    const iDoc = iframe.contentDocument || iframe.contentWindow.document;
-    iDoc.open();
-    iDoc.write(html);
-    iDoc.close();
-
-    // Ensure resources are loaded
-    setTimeout(() => {
-      const opt = {
-        margin: [0, 0, 0, 0], // Margins handled in CSS .page
-        filename: filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-          scale: 2, 
-          useCORS: true, 
-          logging: false, 
-          backgroundColor: '#ffffff',
-          windowWidth: 794 // A4 width in pixels at 96dpi
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'] }
-      };
-
-      // @ts-ignore
-      html2pdf().set(opt).from(iDoc.body).save()
-        .then(() => {
-          document.body.removeChild(iframe);
-          resolve();
-        })
-        .catch(err => {
-          console.error('PDF generation error:', err);
-          if (document.body.contains(iframe)) document.body.removeChild(iframe);
-          reject(err);
-        });
-    }, 1500); // Give it plenty of time for fonts and layout
-  });
 }

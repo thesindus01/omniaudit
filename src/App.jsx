@@ -192,16 +192,44 @@ function App() {
     }
   };
 
+  const renderPdf = async (html, filename) => {
+    const element = document.createElement('div');
+    element.style.position = 'absolute';
+    element.style.left = '-9999px';
+    element.style.top = '0';
+    element.style.width = '794px'; // A4 width at 96dpi
+    element.innerHTML = html;
+    document.body.appendChild(element);
+
+    const opt = {
+      margin: [0, 0, 0, 0],
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff', windowWidth: 794 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] }
+    };
+
+    try {
+      await html2pdf().set(opt).from(element).save();
+    } catch (err) {
+      console.error('PDF Rendering Error:', err);
+      throw err;
+    } finally {
+      document.body.removeChild(element);
+    }
+  };
+
   const handleDownloadPdf = () => {
     if (!results) return;
     setIsGeneratingPdf(true);
 
     setTimeout(async () => {
       try {
-        const { buildExecutivePdfHtml, renderPdfInIframe } = await import('./pdfTemplates.js');
+        const { buildExecutivePdfHtml } = await import('./pdfTemplates.js');
         const domain = results.url.replace(/https?:\/\//, '').replace(/\/$/, '');
         const html = buildExecutivePdfHtml(results, AGENTS_CONFIG);
-        await renderPdfInIframe(html, `OMNIAUDIT-${domain.replace(/[^a-z0-9]/gi, '-')}-Executive.pdf`);
+        await renderPdf(html, `OMNIAUDIT-${domain.replace(/[^a-z0-9]/gi, '-')}-Executive.pdf`);
         setIsGeneratingPdf(false);
         setPdfReady(true);
       } catch (error) {
@@ -209,6 +237,22 @@ function App() {
         setIsGeneratingPdf(false);
       }
     }, 300);
+  };
+
+  const handleDownloadDeepDivePdf = async (agentKey) => {
+    const data = results.stats[agentKey];
+    if (!data?.fullStrategyDeliverable) return;
+    
+    try {
+      const { buildDeepDivePdfHtml } = await import('./pdfTemplates.js');
+      const agent = AGENTS_CONFIG.find(a => a.key === agentKey);
+      const domain = results.url.replace(/https?:\/\//, '').replace(/\/$/, '');
+      
+      const html = buildDeepDivePdfHtml(results, agent, data.fullStrategyDeliverable);
+      await renderPdf(html, `OMNIAUDIT-${domain.replace(/[^a-z0-9]/gi, '-')}-${agentKey}.pdf`);
+    } catch (error) {
+      console.error('Deep Dive PDF Error:', error);
+    }
   };
 
 
