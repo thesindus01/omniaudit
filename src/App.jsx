@@ -276,29 +276,52 @@ function App() {
       === YOUR MASTER SKILL MANUAL ===
       ${skillManual}
       
-      === FINAL CRITICAL FORMATTING MANDATES ===
-      You are an expert UI/UX Executive Copywriter. You MUST format your response using gorgeous, modern Markdown. 
-      The layout MUST look like a high-end, premium $10,000 consulting deliverable.
+      === FINAL CRITICAL FORMATTING MANDATES (OVERRIDE ALL SKILL MANUAL TEMPLATES) ===
+      You are an expert UI/UX Executive Copywriter producing a premium web-rendered report.
       
-      1. CRITICAL DATA RULE: You MUST NOT use space-aligned text. You MUST NOT use Markdown Tables. 
-      Instead, for ANY metrics, comparisons, timelines, or multi-column data, you MUST output a CSV (Comma Separated Values) block wrapped in a markdown codeblock like this:
+      RULE 1 — TITLE: Your H1 title MUST be a human-readable title like "# Email Sequence Strategy" or "# Copy Analysis Report". NEVER use a filename like "EMAIL-SEQUENCES.md" or "COPY-SUGGESTIONS.md" as the title.
       
+      RULE 2 — NO TERMINAL OUTPUT: The Skill Manual may reference a "Terminal Output" section (with === markers). You MUST SKIP IT ENTIRELY. Do not output any === ... === terminal summary blocks. This is a web UI, not a CLI.
+      
+      RULE 3 — DATA AS CSV: You MUST NOT use space-aligned text. You MUST NOT use Markdown tables. For ANY metrics, comparisons, timelines, or multi-column data, output a CSV block like this:
       \`\`\`csv
-      Metric,Industry Benchmark,Target
-      Open Rate,21.0%,25.0%
-      Click Rate,2.5%,3.5%
+      Framework,Recommendation
+      PAS,Stop waiting for slow imports — precision fasteners in days
+      AIDA,40 years of American precision. One supplier. Zero compromises.
       \`\`\`
       
-      2. If you are generating a visual ASCII funnel map or terminal output, you MUST wrap it in a Markdown code block (\` \`\`\` \`).
-      3. DO NOT INDENT TEXT WITH 4 SPACES. This accidentally creates Markdown code blocks and breaks the layout.
-      4. Use \`> blockquotes\` for key insights, takeaways, and revenue impacts.
-      5. Use heavily structured Headings (\`#\`, \`##\`, \`###\`), bolding, and italics to create an interactive, scannable visual hierarchy.
+      RULE 4 — NO 4-SPACE INDENTATION: Never indent text with 4 spaces (it creates unwanted code blocks).
       
-      Output ONLY raw markdown. Do not include any conversational preamble.
+      RULE 5 — HIERARCHY: Use \`##\` for phases, \`###\` for subsections, \`####\` for sub-subsections. Use \`> blockquotes\` for key insights.
+      
+      Output ONLY raw markdown. No conversational preamble.
       `;
 
       const aiResult = await model.generateContent(prompt);
       let outputText = aiResult.response.text();
+
+      // ── Post-processing: Clean up AI output artifacts ──────────────────
+      // 1. Remove .md filename from H1 headings (e.g. "# EMAIL-SEQUENCES.md" → "# Email Sequences")
+      outputText = outputText.replace(/^(#{1,2}\s+)([\w-]+\.md)\s*$/gim, (match, hashes, name) => {
+        const title = name
+          .replace(/\.md$/i, '')
+          .replace(/[-_]/g, ' ')
+          .replace(/\b\w/g, c => c.toUpperCase());
+        return `${hashes}${title}`;
+      });
+
+      // 2. Remove inline .md references from headings (e.g. "## Copy Analysis & Suggestions: COPY-SUGGESTIONS.md")
+      outputText = outputText.replace(/(#{1,6}[^\n]+?)\s+[\w-]+\.md\b/gi, '$1');
+
+      // 3. Strip terminal output code blocks (=== markers) — useless in web UI
+      outputText = outputText.replace(/```[^\n]*\n?(?:={3,}[\s\S]*?={3,}|[\s\S]*?={3,})[\s\S]*?```/g, '');
+
+      // 4. Strip loose === terminal lines that aren't inside code blocks
+      outputText = outputText.replace(/^={3,}.*={3,}\s*$/gm, '');
+
+      // 5. Remove orphaned "Full report saved to: XXX.md" lines
+      outputText = outputText.replace(/^Full report saved to:.*\.md.*$/gmi, '');
+      // ────────────────────────────────────────────────────────────────────
 
       setResults(prev => ({
         ...prev,
