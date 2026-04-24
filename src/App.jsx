@@ -705,17 +705,17 @@ export function DetailedRow({ id, title, score, type, icon, dimensions, identifi
       )}
 
       {fullStrategyDeliverable && (
-        <div style={{ marginTop: '1rem', background: 'rgba(0,0,0,0.2)', padding: '2rem', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
-            <h4 className="text-lg font-bold uppercase tracking-wider" style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-              <FileText size={20} /> Deep Strategy Deliverable
+        <div className="document-paper" style={{ marginTop: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1.5rem' }}>
+            <h4 className="text-xl font-bold uppercase tracking-widest" style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.75rem', margin: 0 }}>
+              <FileText size={24} /> Deep Strategy Deliverable
             </h4>
             <button
               onClick={onDownloadPdf}
               className="btn-primary"
-              style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem', fontSize: '0.9rem', background: '#059669' }}
+              style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.75rem 1.5rem', fontSize: '0.95rem', background: 'var(--success)', borderRadius: '10px' }}
             >
-              <Download size={18} /> Download Premium PDF
+              <Download size={20} /> Download Premium PDF
             </button>
           </div>
           <ReactMarkdown 
